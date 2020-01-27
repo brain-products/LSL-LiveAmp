@@ -1,0 +1,15 @@
+ui_*.h
+LiveAmp\.vs\
+LiveAmp\.vs\*
+LiveAmp\bin\
+LiveAmp\bin\*
+LiveAmp\Debug\
+LiveAmp\Debug\*
+LiveAmp\Release\
+LiveAmp\Release\*
+LiveAmp\Resources\
+LiveAmp\Resources\*
+LiveAmp\x64\
+LiveAmp\x64\*
+*.dll
+*.exe
