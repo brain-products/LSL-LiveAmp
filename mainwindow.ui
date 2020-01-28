@@ -229,7 +229,7 @@ PO10 </string>
             <string>(check)</string>
            </property>
            <property name="checked">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -530,7 +530,14 @@ PO10 </string>
     <addaction name="separator"/>
     <addaction name="actionQuit_2"/>
    </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>About</string>
+    </property>
+    <addaction name="actionVersions"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionLoad_Configuration">
@@ -551,6 +558,11 @@ PO10 </string>
   <action name="actionQuit_2">
    <property name="text">
     <string>Quit</string>
+   </property>
+  </action>
+  <action name="actionVersions">
+   <property name="text">
+    <string>Versions</string>
    </property>
   </action>
  </widget>

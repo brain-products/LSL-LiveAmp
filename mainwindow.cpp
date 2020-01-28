@@ -15,14 +15,17 @@
 
 #include "LiveAmp.h"
 
-#define VERSIONSTREAM(version) version.Major << "." << version.Minor << "." << version.Build << "." << version.Revision
-
+#define LIBVERSIONSTREAM(version) version.Major << "." << version.Minor << "." << version.Build << "." << version.Revision
+#define LSLVERSIONSTREAM(version) (version/100) << "." << (version%100)
+#define APPVERSIONSTREAM(version) version.Major << "." << version.Minor
 
 const int sampling_rates[] = {250,500,1000};
 
 int LiveAmp_SampleSize(HANDLE hDevice, int *typeArray, int* usedChannelsCnt);
 
 MainWindow::MainWindow(QWidget *parent, const std::string &config_file): QMainWindow(parent),ui(new Ui::MainWindow) {
+	m_AppVersion.Major = 1;
+	m_AppVersion.Minor = 17;
 	ui->setupUi(this);
 	// parse startup config file
 	load_config(config_file);
@@ -32,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent, const std::string &config_file): QMainWi
 	QObject::connect(ui->linkButton, SIGNAL(clicked()), this, SLOT(link()));
 	QObject::connect(ui->actionLoad_Configuration, SIGNAL(triggered()), this, SLOT(load_config_dialog()));
 	QObject::connect(ui->actionSave_Configuration, SIGNAL(triggered()), this, SLOT(save_config_dialog()));
+	QObject::connect(ui->actionVersions, SIGNAL(triggered()), this, SLOT(versions_dialog()));
 	QObject::connect(ui->refreshDevices,SIGNAL(clicked()),this,SLOT(refresh_devices()));
 	QObject::connect(ui->eegChannelCount, SIGNAL(valueChanged(int)),this, SLOT(update_channel_labels_with_eeg(int)));
 	QObject::connect(ui->bipolarChannelCount, SIGNAL(valueChanged(int)),this, SLOT(update_channel_labels_with_bipolar(int)));
@@ -45,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent, const std::string &config_file): QMainWi
 	sampledMarkers = true;
 	sampledMarkersEEG = false;
 
+	//update_channel_labels();
 		
 }
 
@@ -79,15 +84,32 @@ void MainWindow::update_channel_labels(void) {
 	int total_electrodes = eeg + bip;
 
 	std::string str;
+	std::vector<std::string> vsEEGChannelLabels;
+	str = ui->channelLabels->toPlainText().toStdString();
+	boost::split(vsEEGChannelLabels, str, boost::is_any_of("\n"));
+	int val = ui->eegChannelCount->value();
+
+	while (int i = vsEEGChannelLabels.size() > val)
+		vsEEGChannelLabels.pop_back();
+	while (vsEEGChannelLabels[vsEEGChannelLabels.size() - 1].find("*") != std::string::npos)
+		vsEEGChannelLabels.pop_back();
 	ui->channelLabels->clear();
-	long long i;
-	for (i = 1; i <= total_electrodes; i++) {
-		str = std::to_string(i);
+	for (int i = 1; i <= total_electrodes; i++) {
+		if (i - 1 < vsEEGChannelLabels.size())
+			str = vsEEGChannelLabels[i - 1];
+		else
+			str = std::to_string(i);
+		if (str.compare("ACC_X") == 0)
+			str = std::to_string(i);
+		if (str.compare("ACC_Y") == 0)
+			str = std::to_string(i);
+		if (str.compare("ACC_Z") == 0)
+			str = std::to_string(i);
 		if (i>ui->eegChannelCount->value())str += "*";
 		ui->channelLabels->appendPlainText(str.c_str());
 		//ui->channelLabels->appendPlainText("\n");
 	}
-	for (i = 1; i <= aux; i++) {
+	for (int i = 1; i <= aux; i++) {
 		str = "AUX_" + std::to_string(i);
 		ui->channelLabels->appendPlainText(str.c_str());
 	}
@@ -121,6 +143,20 @@ void MainWindow::save_config_dialog() {
 	QString sel = QFileDialog::getSaveFileName(this,"Save Configuration File","","Configuration Files (*.cfg)");
 	if (!sel.isEmpty())
 		save_config(sel.toStdString());
+}
+
+void MainWindow::versions_dialog()
+{
+	t_VersionNumber libVersion;
+	GetLibraryVersion(&libVersion);
+	int32_t lslProtocolVersion = lsl::protocol_version();
+	int32_t lslLibVersion = lsl::library_version();
+	std::stringstream ss;
+	ss << "Amplifier_LIB: " << LIBVERSIONSTREAM(libVersion)  << "\n" <<
+		  "lsl protocol: " << LSLVERSIONSTREAM(lslProtocolVersion) << "\n" <<
+		  "liblsl: " << LSLVERSIONSTREAM(lslLibVersion) << "\n" <<
+		  "App: " << APPVERSIONSTREAM(m_AppVersion);
+	QMessageBox::information(this, "Versions", ss.str().c_str(), QMessageBox::Ok);
 }
 
 void MainWindow::update_channel_labels_aux(int n) {
@@ -172,8 +208,9 @@ void MainWindow::load_config(const std::string &filename) {
 		ui->channelLabels->clear();
 		BOOST_FOREACH(ptree::value_type &v, pt.get_child("channels.labels"))
 			ui->channelLabels->appendPlainText(v.second.data().c_str());
-		if (ui->useACC->isChecked())
-			ui->channelLabels->appendPlainText("ACC_X\nACC_Y\nACC_Z");
+		//if (ui->useACC->isChecked())
+			//ui->channelLabels->appendPlainText("ACC_X\nACC_Y\nACC_Z");
+		update_channel_labels();
 	} catch(std::exception &) {
 		QMessageBox::information(this,"Error in Config File","Could not read out config parameters.",QMessageBox::Ok);
 		return;
@@ -379,7 +416,7 @@ void MainWindow::link() {
 			// print library version
 			t_VersionNumber version;
 			GetLibraryVersion(&version);
-			std::cout << "Library Version " << VERSIONSTREAM(version) << std::endl;
+			std::cout << "Library Version " << LIBVERSIONSTREAM(version) << std::endl;
 
 			// set the sampling rate and serial number
 			float fSamplingRate = (float) samplingRate;
@@ -610,10 +647,26 @@ void MainWindow::read_thread(int chunkSize, int samplingRate, std::vector<std::s
 		data_info.desc().append_child("acquisition")
 			.append_child_value("manufacturer","Brain Products");
 
+		t_VersionNumber libVersion;
+		GetLibraryVersion(&libVersion);
+		int32_t lslProtocolVersion = lsl::protocol_version();
+		int32_t lslLibVersion = lsl::library_version();
+		std::stringstream ssLib;
+		ssLib << LIBVERSIONSTREAM(libVersion);
+		std::stringstream ssProt;
+		ssProt << LSLVERSIONSTREAM(lslProtocolVersion);
+		std::stringstream ssLSL;
+		ssLSL << LSLVERSIONSTREAM(lslLibVersion);
+		std::stringstream ssApp;
+		ssApp << APPVERSIONSTREAM(m_AppVersion);
 		// make a data outlet
 		lsl::stream_outlet data_outlet(data_info);
 
-
+		data_info.desc().append_child("versions")
+			.append_child_value("Amplifier_LIB", ssLib.str())
+			.append_child_value("lsl_protocol", ssProt.str())
+			.append_child_value("liblsl", ssLSL.str())
+			.append_child_value("App", ssApp.str());
 
 		// create marker streaminfo and outlet
 		if(unsampledMarkers) {

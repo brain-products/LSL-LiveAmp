@@ -21,8 +21,6 @@
 
 #include "LiveAmp.h"
 
-
-
 namespace Ui {
 class MainWindow;
 }
@@ -50,7 +48,7 @@ private slots:
     // config file dialog ops (from main menu)
     void load_config_dialog();
     void save_config_dialog();
-   
+	void versions_dialog();
 	// get list of available devices
 	void refresh_devices();
 
@@ -120,6 +118,11 @@ private:
 	bool stop_;											// whether the reader thread is supposed to stop
 
 	t_TriggerOutputMode triggerOutputMode;
+	struct t_AppVersion {
+		int32_t Major;
+		int32_t Minor;
+	};
+	t_AppVersion m_AppVersion;
 
 };
 
