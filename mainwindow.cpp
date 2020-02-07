@@ -25,7 +25,7 @@ int LiveAmp_SampleSize(HANDLE hDevice, int *typeArray, int* usedChannelsCnt);
 
 MainWindow::MainWindow(QWidget *parent, const std::string &config_file): QMainWindow(parent),ui(new Ui::MainWindow) {
 	m_AppVersion.Major = 1;
-	m_AppVersion.Minor = 17;
+	m_AppVersion.Minor = 18;
 	overrideAutoUpdate = false;
 	ui->setupUi(this);
 	// parse startup config file
