@@ -13,6 +13,7 @@ LiveAmp::LiveAmp(std::string serialNumberIn, float samplingRateIn, bool useSim, 
 	bIsClosed = false;
 	bHasSTE = false;
 	bIs64 = false;
+	m_bUseSampleCounter = false;
 	if(useSim)
 		strcpy_s(HWI, "SIM");
 	else
@@ -394,10 +395,10 @@ void LiveAmp::enableChannels(const std::vector<int>& eegIndicesIn, const std::ve
 			res = ampGetProperty(h, PG_CHANNEL, i, CPROP_F32_Resolution, &resolution, sizeof(resolution));
 			channelInfoArray[cnt].resolution = resolution;
 			res = ampGetProperty(h, PG_CHANNEL, i, CPROP_I32_Type, &channelType, sizeof(channelType));
-			channelInfoArray[cnt++].channelType = channelType;
+			channelInfoArray[cnt].channelType = channelType;
 			res = ampGetProperty(h, PG_CHANNEL, i, CPROP_F32_Gain, &gain, sizeof(gain));
 			channelInfoArray[cnt].gain = gain;
-
+			cnt++;
 			switch (dataType)
 			{
 			case DT_INT16:
@@ -475,7 +476,7 @@ void LiveAmp::pushAmpData(BYTE* buffer, int bufferSize, int64_t samplesRead, std
 		sc = *(uint64_t*)&buffer[s*sampleSize + offset];				
 		offset += 8; // sample counter offset 
 
-		tmpData.resize(enabledChannelCnt);
+		tmpData.resize(enabledChannelCnt + ((m_bUseSampleCounter) ? 1 : 0));
 
 		for (int i=0; i < enabledChannelCnt; i++)
 		{
@@ -549,6 +550,8 @@ void LiveAmp::pushAmpData(BYTE* buffer, int bufferSize, int64_t samplesRead, std
 
 			tmpData[i] = sample;
 		}
+		if (m_bUseSampleCounter)
+			tmpData[enabledChannelCnt] = (float)sc;
 		outData.push_back(tmpData);
 	}
 }

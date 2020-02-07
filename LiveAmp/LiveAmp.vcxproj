@@ -65,12 +65,14 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
   </PropertyGroup>
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
@@ -107,7 +109,7 @@
       <SubSystem>Windows</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\Win32\Release;C:\Users\david.medine\LSL\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\Win32\Release;C:\Users\david.medine\LSL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>liblsl32-debug.lib;%(AdditionalDependencies);LiveAmpLib2.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -116,7 +118,7 @@ echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017\plugins\platforms\qwindowsd.dll
 echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017\bin\Qt5Cored.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Cored.dll"
 echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017\bin\Qt5Guid.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Guid.dll"
 echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017\bin\Qt5Widgetsd.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Widgetsd.dll"
-echo F| xcopy /y "$(SolutionDir)..\default_config.cfg" "$(SolutionDir)bin\$(Platform)\$(Configuration)\default_config.cfg"
+echo F| xcopy /y "$(SolutionDir)..\liveamp_config.cfg" "$(SolutionDir)bin\$(Platform)\$(Configuration)\liveamp_config.cfg"
 echo F| xcopy /y "C:\Users\David.Medine\LSL\bin\liblsl32-debug.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\liblsl32-debug.dll"
 echo F| xcopy /y "C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\Win32\Release\LiveAmpLib2.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\LiveAmpLib2.dll"</Command>
     </PostBuildEvent>
@@ -134,7 +136,7 @@ echo F| xcopy /y "C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2
       <SubSystem>Windows</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\x64\Release;C:\Users\david.medine\LSL\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\x64\Release;C:\Users\david.medine\LSL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>liblsl64-debug.lib;%(AdditionalDependencies);LiveAmpLib2.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -160,7 +162,7 @@ echo F| xcopy /y "C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2
       <SubSystem>Windows</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\Win32\Release;C:\Users\david.medine\LSL\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\Win32\Release;C:\Users\david.medine\LSL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>liblsl32.lib;%(AdditionalDependencies);LiveAmpLib2.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -192,7 +194,7 @@ xcopy /y /s  "$(SolutionDir)bin\$(Platform)\$(Configuration)" "$(SolutionDir)bin
       <SubSystem>Windows</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\x64\Release;C:\Users\david.medine\LSL\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\x64\Release;C:\Users\david.medine\LSL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>liblsl64.lib;%(AdditionalDependencies);LiveAmpLib2.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -219,12 +221,16 @@ xcopy /y /s  "$(SolutionDir)bin\$(Platform)\$(Configuration)" "$(SolutionDir)bin
   <ItemGroup>
     <ClInclude Include="..\Amplifier_LIB.h" />
     <ClInclude Include="..\LiveAmp.h" />
+    <ClInclude Include="resource.h" />
     <QtMoc Include="..\mainwindow.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\LiveAmp.cpp" />
     <ClCompile Include="..\main.cpp" />
     <ClCompile Include="..\mainwindow.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="icon.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

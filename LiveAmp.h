@@ -52,6 +52,7 @@ private:
 	int enabledChannelCnt;
 	bool bIsClosed;
 	bool bIs64;
+	bool m_bUseSampleCounter;
 	
 
 public:
@@ -104,6 +105,7 @@ public:
 	inline bool				 isClosed(void){return bIsClosed;}
 	inline bool              hasSTE(void) { return bHasSTE; }
 	inline bool              is64(void) { return bIs64; }
+	inline void              setUseSampleCounter(bool bUseSampleCounter) { m_bUseSampleCounter = bUseSampleCounter; }
 };
 
 #endif //LiveAmp_H

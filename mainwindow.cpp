@@ -26,6 +26,7 @@ int LiveAmp_SampleSize(HANDLE hDevice, int *typeArray, int* usedChannelsCnt);
 MainWindow::MainWindow(QWidget *parent, const std::string &config_file): QMainWindow(parent),ui(new Ui::MainWindow) {
 	m_AppVersion.Major = 1;
 	m_AppVersion.Minor = 17;
+	overrideAutoUpdate = false;
 	ui->setupUi(this);
 	// parse startup config file
 	load_config(config_file);
@@ -444,7 +445,7 @@ void MainWindow::link() {
 			}
 			//if (liveAmp->hasSTE())         // if there is a STE, set the output mode, sync values are hardcoded except for freq
 			liveAmp->setOutTriggerMode(triggerOutputMode, 8, ui->sbSyncFreq->value(), 5);
-
+			liveAmp->setUseSampleCounter(ui->sampleCounter->isChecked());
 			if(!check_configuration())
 			{
 				QMessageBox::critical(this,"Error","Requested configuration settings do not match the hardware settings on your device. Please check your module's channel settings." ,QMessageBox::Ok);
@@ -535,9 +536,11 @@ void MainWindow::read_thread(int chunkSize, int samplingRate, std::vector<std::s
 	int totalChannelCount = ui->eegChannelCount->value() +
 		ui->bipolarChannelCount->value() +
 		ui->auxChannelCount->value() +
-		((ui->useACC->isChecked()) ? 3 : 0);
+		((ui->useACC->isChecked()) ? 3 : 0) +
+		((ui->sampleCounter->isChecked() ? 1 : 0));
+	bool bUseSampleCounter = ui->sampleCounter->isChecked();
 
-
+	int triggerChannelIdx = totalChannelCount - (ui->sampleCounter->isChecked() ? 1 : 0);
 	// extra EEG channel counter
 	int extraEEGMarkerChannelCnt = 0;
 	if (sampledMarkersEEG)
@@ -624,14 +627,16 @@ void MainWindow::read_thread(int chunkSize, int samplingRate, std::vector<std::s
 		if(sampledMarkersEEG){
 			// append the trigger channel metadata
 				channels.append_child("channel")
-					.append_child_value("type","DeviceTrigger")
-					.append_child_value("unit","integer");
+					.append_child_value("label", "Markers")
+					.append_child_value("type","Markers")
+					.append_child_value("unit","");
 		}
 
 		// only create this channel if the STE is connected
 		if (sampledMarkersEEG && liveAmp->hasSTE()) {
 			// append the trigger channel metadata
 				channels.append_child("channel")
+				.append_child_value("label", "STETriggerIn")
 				.append_child_value("type", "STETriggerIn")
 				.append_child_value("unit", "integer");
 		}
@@ -640,8 +645,17 @@ void MainWindow::read_thread(int chunkSize, int samplingRate, std::vector<std::s
 		if (sampledMarkersEEG && liveAmp->hasSTE()&&!ui->rbDefault->isChecked()) {
 			// append the trigger channel metadata
 				channels.append_child("channel")
+				.append_child_value("label", "STETriggerOut")
 				.append_child_value("type", "STETriggerOut")
 				.append_child_value("unit", "integer");
+		}
+
+		if (bUseSampleCounter) {
+			// append the trigger channel metadata
+			channels.append_child("channel")
+				.append_child_value("label", "SampleCounter")
+				.append_child_value("type", "SampleCounter")
+				.append_child_value("unit", "");
 		}
 
 		data_info.desc().append_child("acquisition")
@@ -689,7 +703,7 @@ void MainWindow::read_thread(int chunkSize, int samplingRate, std::vector<std::s
 		int last_mrk = 0;
 
 		// read data stream from amplifier
-		int32_t bufferSize = (chunkSize + 10) * liveAmp->getSampleSize();
+		int32_t bufferSize = (chunkSize) * liveAmp->getSampleSize();
 		buffer = new BYTE[bufferSize];
 
 		chunk_buffer.clear();

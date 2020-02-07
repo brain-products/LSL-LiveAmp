@@ -247,6 +247,23 @@ PO10 </string>
            </property>
           </widget>
          </item>
+         <item row="8" column="1">
+          <widget class="QCheckBox" name="sampleCounter">
+           <property name="toolTip">
+            <string>Enabling this will create an addition EEG channel that corresponds to the hardware sample counter.</string>
+           </property>
+           <property name="text">
+            <string>(check)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Sample Counter in EEG</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
