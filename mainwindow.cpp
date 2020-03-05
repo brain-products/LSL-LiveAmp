@@ -156,7 +156,7 @@ void MainWindow::versions_dialog()
 	ss << "Amplifier_LIB: " << LIBVERSIONSTREAM(libVersion)  << "\n" <<
 		  "lsl protocol: " << LSLVERSIONSTREAM(lslProtocolVersion) << "\n" <<
 		  "liblsl: " << LSLVERSIONSTREAM(lslLibVersion) << "\n" <<
-		  "App: " << APPVERSIONSTREAM(m_AppVersion);
+		  "App: " << APPVERSIONSTREAM(m_AppVersion) << "_beta";
 	QMessageBox::information(this, "Versions", ss.str().c_str(), QMessageBox::Ok);
 }
 
@@ -680,7 +680,7 @@ void MainWindow::read_thread(int chunkSize, int samplingRate, std::vector<std::s
 			.append_child_value("Amplifier_LIB", ssLib.str())
 			.append_child_value("lsl_protocol", ssProt.str())
 			.append_child_value("liblsl", ssLSL.str())
-			.append_child_value("App", ssApp.str());
+			.append_child_value("App", ssApp.str() + "_beta");
 
 		// create marker streaminfo and outlet
 		if(unsampledMarkers) {
