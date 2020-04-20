@@ -45,86 +45,70 @@ public:
     
 
 private slots:
-    // config file dialog ops (from main menu)
-    void load_config_dialog();
-    void save_config_dialog();
-	void versions_dialog();
-	// get list of available devices
-	void refresh_devices();
 
-	// link to selected device
-	void link();
-
-    // close event (potentially disabled)
-    void closeEvent(QCloseEvent *ev);
-
-	void update_channel_labels_with_eeg(int);
-	void update_channel_labels_with_bipolar(int);
-	void update_channel_labels_aux(int);
-	void update_channel_labels_acc(bool);
-	
-	// if the device combo box item changes
-	void choose_device(int which);
-
-	void radio_button_behavior(bool b);
-	
-
+    void LoadConfigDialog();
+    void SaveConfigDialog();
+	void VersionsDialog();
+	void RefreshDevices();
+	void Link();
+    void CloseEvent(QCloseEvent *ev);
+	void UpdateChannelLabelsWithEeg(int);
+	void UpdateChannelLabelsWithBipolar(int);
+	void UpdateChannelLabelsAux(int);
+	void UpdateChannelLabelsAcc(bool);
+	void ChooseDevice(int which);
+	void RadioButtonBehavior(bool b);
 
 private:
 
-	int eegChannelCount;
-	std::vector<int> usableChannelsByDevice;
-	int bipolarChannelCount;
-	bool overwrite;
-	bool overrideAutoUpdate;
-	bool check_configuration();
-	void update_channel_counters(int n);
-	void wait_message();
-	void update_channel_labels(void);
-
-	// background data reader thread
-	void read_thread(int chunkSize, int samplingRate, std::vector<std::string> channelLabels);
-
-	
-	// container for amplifier enumeration
-	//std::vector<std::pair<std::string, int>> ampData;
-
-    // raw config file IO
-    void load_config(const std::string &filename);
-    void save_config(const std::string &filename);
-
-	bool ConfigureLiveAmp(void);
-	bool InitializeLiveAmp(void);
-	
-	void ExtractLiveAmpData(BYTE* buffer, int size, int samplesize, int *dataTypes, int usedChannelsCnt, std::vector<std::vector<double>> &extractData);
-	bool EnableLiveAmpChannels(bool enableAUX, bool enableACC);
-	bool GenerateUsedPhysicalChannelIndexes(void);
-	void PrepareDataToSendOverLSL(std::vector<std::vector<double>> &LiveAmptData, std::vector<std::vector<double>> &LSLData, std::vector<uint16_t> &trigger_buffer);
-	void AdjustChannelLabels(std::vector<std::string>& inpuChannelLabels, std::vector<std::string> &adjustedChannelLabels);
-	
-	bool unsampledMarkers;  
-	bool sampledMarkers;   
-	bool sampledMarkersEEG; 
-	bool useSim;
-
-	LiveAmp *liveAmp;
-	std::vector<std::string> live_amp_sns;				// live amp serial number container
-
-	std::unique_ptr<std::thread>  reader_thread_;	// our reader thread
-
-    Ui::MainWindow *ui;
-
-	bool use_simulators;
-	bool stop_;											// whether the reader thread is supposed to stop
-
-	t_TriggerOutputMode triggerOutputMode;
-	struct t_AppVersion {
+	struct t_AppVersion
+	{
 		int32_t Major;
 		int32_t Minor;
 		int32_t Bugfix;
 	};
 	t_AppVersion m_AppVersion;
 
+	struct t_AmpConfiguration
+	{
+		std::string m_sSerialNumber;
+		double m_dSamplingRate;
+		int m_nChunkSize;
+		std::vector<std::string> m_psChannelLabels;
+		std::vector<std::string> m_psEegChannelLabels;
+		std::vector<std::string> m_psBipolarChannelLabels;
+		std::vector<std::string> m_psAuxChannelLabels;
+		bool m_bUnsampledMarkers;
+		bool m_bSampledMarkersEEG;
+		bool m_bUseACC;
+		bool m_bUseSim;
+	};
+
+	int m_nEegChannelCount;
+	std::vector<int> m_pnUsableChannelsByDevice;
+	bool m_bOverwrite;
+	bool m_bOverrideAutoUpdate;
+	LiveAmp m_LiveAmp;
+	std::vector<std::string> m_psLiveAmpSns;
+	std::unique_ptr<std::thread>  m_ptReaderThread;
+	Ui::MainWindow* ui;
+	bool m_bUseSimulators;
+	bool m_bStop;
+	t_TriggerOutputMode m_TriggerOutputMode;
+
+
+	bool CheckConfiguration();
+	void UpdateChannelCounters(int n);
+	void WaitMessage();
+	void UpdateChannelLabels(void);
+//	void ReadThread(int chunkSize, int samplingRate, std::vector<std::string> channelLabels);
+	void ReadThread(t_AmpConfiguration ampConfiguration);
+	void LoadConfig(const std::string &filename);
+	template <typename T>
+	void LoadConfigImpl(T tPropertyTree);
+    void SaveConfig(const std::string &filename);
+	template <typename T>
+	void SaveConfigImpl(T tPropertyTree);
 };
 
 #endif // MAINWINDOW_H

@@ -7,64 +7,56 @@
 #include "Amplifier_LIB.h"
 #include <vector>
 #include <string>
-#include <boost/shared_ptr.hpp>
-
-
-
 
 class LiveAmp {
 
 private:
-	// data get from device (defined in construction)
-	// these are initialized in the constructor
-	HANDLE h;                        // device handle
-	std::string serialNumber;        // serial number
-	int availableChannels;           // number of available channels
-	//int usableChannels;				 // whether we are liveamp 8, 16, 32, 64
-	int availableModules;            // use to detect STE box
-	bool bHasSTE;                    // actual flag for STE connected
-	int STEIdx;                      // index of which module is the STE
-
-	// these are set later on by the user
-	float samplingRate;
-	int recordingMode;               // defaults to record mode
+	HANDLE m_Handle;                       
+	std::string m_sSerialNumber;       
+	int m_nAvailableChannels;         
+	int m_nAvailableModules;            
+	bool m_bHasSTE;                   
+	int m_nSTEIdx;                     
+	float m_fSamplingRate;
+	int m_nRecordingMode;             
 
 	// set during configuration
 	typedef struct _channelInfo {
-		int dataType;
-		float resolution;
-		int channelType;
-		float gain;
+		int m_nDataType;
+		float m_fResolution;
+		int m_nChannelType;
+		float m_fGain;
 	}t_channelInfo;
 	// int dataTypeArray[100];
-	t_channelInfo channelInfoArray[100];
-	int sampleSize;
+	t_channelInfo m_pChannelInfo[100];
+	int m_nSampleSize;
 
 
 	// flexible? channel access arrays
-	std::vector<int> channelIndexes;  
-	std::vector<int> eegIndices;
-	std::vector<int> bipolarIndices;
-	std::vector<int> auxIndices;
-	std::vector<int> accIndices;
-	std::vector<int> trigIndices;
+	std::vector<int> m_pnChannelIndexes;  
+	std::vector<int> m_pnEegIndices;
+	std::vector<int> m_pnBipolarIndices;
+	std::vector<int> m_pnAuxIndices;
+	std::vector<int> m_pnAccIndices;
+	std::vector<int> m_pnTrigIndices;
 
-	int enabledChannelCnt;
-	bool bIsClosed;
-	bool bIs64;
+	int m_nEnabledChannelCnt;
+	bool m_bIsClosed;
+	bool m_bIs64;
 	bool m_bUseSampleCounter;
+	bool m_bWasEnumerated;
 	
 
 public:
-	// constructor
-	// initialize by at least the serial number and a container for the enumerated devices
-	LiveAmp::LiveAmp(std::string serialNumberIn, float samplingRateIn = 500, bool useSim = false, int recordingModeIn = RM_NORMAL);
-	//LiveAmp::LiveAmp (void);
-	// destructor
-	~LiveAmp();
+
+	LiveAmp(void) { m_bWasEnumerated = false; }
+	~LiveAmp() { ; }
 	
 	// get the serial numbers and channel counts of all available liveamps
-	static void enumerate(std::vector<std::pair<std::string, int>> &ampData, bool useSim=false);
+	void enumerate(std::vector<std::pair<std::string, int>> &ampData, bool useSim=false);
+
+	//
+	int Setup(std::string serialNumberIn, float samplingRateIn = 500, bool useSim = false, int recordingModeIn = RM_NORMAL);
 
 	// close live amp device
 	void close();
@@ -88,23 +80,21 @@ public:
 	void setOutTriggerMode(t_TriggerOutputMode mode, int syncPin, int freq, int pulseWidth);
 
 	// public data access methods 	
-	inline float             getSamplingRate(void){return samplingRate;}
-	inline HANDLE            getHandle(void) { if (h == NULL)return NULL;else return h; }
-	inline std::string&      getSerialNumber(void){return serialNumber;}
-	inline int               getAvailableChannels(void){return availableChannels;}
-	inline int               getRecordingMode(void){return recordingMode;}
-	inline std::vector<int>& getEEGIndices(void){return eegIndices;}
-	inline std::vector<int>& getBipolarIndices(void){return bipolarIndices;}
-	inline std::vector<int>& getAuxIndices(void){return auxIndices;}
-	inline std::vector<int>& getAccIndices(void){return accIndices;}
-	inline std::vector<int>& getTrigIndices(void){return trigIndices;}
-	inline int               getEnabledChannelCnt(void){return enabledChannelCnt;}
-	//inline int*              getDataTypeArray(void){return dataTypeArray;}  
-	inline int               getSampleSize(void){return sampleSize;}
-	//inline int				 getUsableChannels(void){return usableChannels;}
-	inline bool				 isClosed(void){return bIsClosed;}
-	inline bool              hasSTE(void) { return bHasSTE; }
-	inline bool              is64(void) { return bIs64; }
+	inline float             getSamplingRate(void){return m_fSamplingRate;}
+	inline HANDLE            getHandle(void) { if (m_Handle == NULL)return NULL;else return m_Handle; }
+	inline std::string&      getSerialNumber(void){return m_sSerialNumber;}
+	inline int               getAvailableChannels(void){return m_nAvailableChannels;}
+	inline int               getRecordingMode(void){return m_nRecordingMode;}
+	inline std::vector<int>& getEEGIndices(void){return m_pnEegIndices;}
+	inline std::vector<int>& getBipolarIndices(void){return m_pnBipolarIndices;}
+	inline std::vector<int>& getAuxIndices(void){return m_pnAuxIndices;}
+	inline std::vector<int>& getAccIndices(void){return m_pnAccIndices;}
+	inline std::vector<int>& getTrigIndices(void){return m_pnTrigIndices;}
+	inline int               getEnabledChannelCnt(void){return m_nEnabledChannelCnt;}
+	inline int               getSampleSize(void){return m_nSampleSize;}
+	inline bool				 isClosed(void){return m_bIsClosed;}
+	inline bool              hasSTE(void) { return m_bHasSTE; }
+	inline bool              is64(void) { return m_bIs64; }
 	inline void              setUseSampleCounter(bool bUseSampleCounter) { m_bUseSampleCounter = bUseSampleCounter; }
 };
 

@@ -1,134 +1,95 @@
 #include "LiveAmp.h"
-#include <boost/lexical_cast.hpp>
 
+int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSim, int nRecordingMode) {
 
-// TODO: overload the constructor so that 
-// live amp objects can be initialized by serial number etc.
-//
-LiveAmp::LiveAmp(std::string serialNumberIn, float samplingRateIn, bool useSim, int recordingModeIn) {
-//LiveAmp::LiveAmp(){	
-	int res;
-	char HWI[20];
-	
-	bIsClosed = false;
-	bHasSTE = false;
-	bIs64 = false;
+	char HWI[20];	
+	m_bIsClosed = false;
+	m_bHasSTE = false;
+	m_bIs64 = false;
 	m_bUseSampleCounter = false;
-	if(useSim)
+	if(bUseSim)
 		strcpy_s(HWI, "SIM");
 	else
 		strcpy_s(HWI, "ANY"); // todo: parameterize this
 
-	res = ampEnumerateDevices(HWI, sizeof(HWI), "LiveAmp", 0);
-
-	if (res <= 0)			
-		throw std::runtime_error("No LiveAmp connected or device wasn't properly closed. Try restarting this application.");
-	else {
-		for(int i=0;i<res;i++){	
-			int result;
-
-			HANDLE hndl = NULL;
-			
-			result = ampOpenDevice(i, &hndl);
-			// set the handle
-			
-			if(result == AMP_OK) {
-				
-				//std::string msg = "Cannot open device: ";
-				//msg.append (boost::lexical_cast<std::string>(i).c_str());
-				//msg.append("  error= " );
-				//msg.append(boost::lexical_cast<std::string>(res).c_str()); // TODO: error enumeration from liveamp driver
-				//throw std::runtime_error(msg);
-			
-				h = hndl;
-				char sVar[20]; 
-				result = ampGetProperty(hndl, PG_DEVICE, i, DPROP_CHR_SerialNumber, sVar, sizeof(sVar));
-
-				// got a hit!
-				if (!(strcmp(sVar, serialNumberIn.c_str()))) {
-
-					// set the device mode to recording
-					result = ampSetProperty(hndl, PG_DEVICE, 0, DPROP_I32_RecordingMode, &recordingModeIn, sizeof(recordingModeIn));
-					if (result != AMP_OK) {
-						throw std::runtime_error(("Error setting acquisition mode, error code:  " + boost::lexical_cast<std::string>(result)).c_str());
-						return;
-					}
-					recordingMode = recordingModeIn;
-
-
-
-					// set the serial number
-					serialNumber = std::string(sVar);
-
-					// set the available channels
-					result = ampGetProperty(h, PG_DEVICE, 0, DPROP_I32_AvailableChannels, &availableChannels, sizeof(availableChannels));
-					if (result != AMP_OK)
-						throw std::runtime_error(("Error getting available channel count, error code:  " + boost::lexical_cast<std::string>(result)).c_str());
-
-					//// set the usable channels               // this property name is misspelled in the API---we use the correct spelling locally
-					//result = ampGetProperty(h, PG_MODULE, 0, MPROP_I32_UseableChannels, &usableChannels, sizeof(usableChannels));
-					//if (result != AMP_OK)
-					//	throw std::runtime_error(("Error getting usable channel count, error code:  " + boost::lexical_cast<std::string>(result)).c_str());
-
-					// set the usable channels               // this property name is misspelled in the API---we use the correct spelling locally
-					result = ampGetProperty(h, PG_DEVICE, 0, DPROP_I32_AvailableModules, &availableModules, sizeof(availableModules));
-					if (result != AMP_OK)
-						throw std::runtime_error(("Error getting available module channel count, error code:  " + boost::lexical_cast<std::string>(result)).c_str());
-					// detect whether or not STE is connected
-					char modName[100];
-					
-					for (int n = 0; n < availableModules; n++)
-					{
-						result = ampGetProperty(h, PG_MODULE, n, MPROP_CHR_Type, &modName, sizeof(modName));
-						if (!strcmp(modName, "STE"))
-						{
-							bHasSTE = true;
-							STEIdx = n;
-						}
-					}
-
-					bIs64 = false;
-					char sType[100];
-					result = ampGetProperty(h, PG_DEVICE, 0, DPROP_CHR_Type, &sType, sizeof(sType));
-					if (result != AMP_OK) {
-						throw std::runtime_error(("Error getting device name, error code:  " +
-												  boost::lexical_cast<std::string>(result))
-													 .c_str());
-						return;
-					}
-					if(!(strcmp("LiveAmp64", sType)))
-					{ 
-						bIs64 = true;
-					}
-
-					// set the sampling rate on the device
-					result = ampSetProperty(hndl, PG_DEVICE, 0, DPROP_F32_BaseSampleRate,
-						&samplingRateIn, sizeof(samplingRateIn));
-					if (result != AMP_OK) {
-						throw std::runtime_error(("Error setting sampling rate, error code:  " +
-												  boost::lexical_cast<std::string>(result))
-													 .c_str());
-						return;
-					}
-					samplingRate = samplingRateIn;
-					break;
-				}
-			}
-
-		}
+	int nRetVal = -1;
+	int nRes = 5;
+	if (!m_bWasEnumerated)
+	{
+		nRes = ampEnumerateDevices(HWI, sizeof(HWI), "LiveAmp", 0);
+		m_bWasEnumerated = false;
 	}
 
-}
+	if (nRes <= 0)
+		throw std::runtime_error("No LiveAmp connected");
+	for(int i=0;i<nRes;i++)
+	{	
+		int nResult;
 
-LiveAmp::~LiveAmp(void){
-//
-//	close();
-////	int res = ampCloseDevice(h);
+		HANDLE handle = NULL;			
+		nResult = ampOpenDevice(i, &handle);
+			
+		if (nResult == AMP_OK) 
+		{
+
+			m_Handle = handle;
+			char sVar[20];
+			nResult = ampGetProperty(handle, PG_DEVICE, i, DPROP_CHR_SerialNumber, sVar, sizeof(sVar));
+
+			// got a hit!
+			if (!(strcmp(sVar, sSerialNumber.c_str()))) {
+				nRetVal = 0;
+				// set the device mode to recording
+				nResult = ampSetProperty(m_Handle, PG_DEVICE, 0, DPROP_I32_RecordingMode, &nRecordingMode, sizeof(nRecordingMode));
+				if (nResult != AMP_OK) 
+					throw std::runtime_error("Error setting acquisition mode, error code:  " + std::to_string(nResult));
+					
+				m_nRecordingMode = nRecordingMode;
+				m_sSerialNumber = std::string(sVar);
+				nResult = ampGetProperty(m_Handle, PG_DEVICE, 0, DPROP_I32_AvailableChannels, &m_nAvailableChannels, sizeof(m_nAvailableChannels));
+				if (nResult != AMP_OK)
+					throw std::runtime_error("Error getting available channel count, error code:  " + std::to_string(nResult));
+
+				nResult = ampGetProperty(m_Handle, PG_DEVICE, 0, DPROP_I32_AvailableModules, &m_nAvailableModules, sizeof(m_nAvailableModules));
+				if (nResult != AMP_OK)
+					throw std::runtime_error("Error getting available module channel count, error code:  " + std::to_string(nResult));
+				char sModName[100];
+				for (int n = 0; n < m_nAvailableModules; n++)
+				{
+					nResult = ampGetProperty(m_Handle, PG_MODULE, n, MPROP_CHR_Type, &sModName, sizeof(sModName));
+					if (!strcmp(sModName, "STE"))
+					{
+						m_bHasSTE = true;
+						m_nSTEIdx = n;
+					}
+				}
+
+				m_bIs64 = false;
+				char sType[100];
+				nResult = ampGetProperty(m_Handle, PG_DEVICE, 0, DPROP_CHR_Type, &sType, sizeof(sType));
+				if (nResult != AMP_OK) 
+					throw std::runtime_error("Error getting device name, error code:  " +
+						std::to_string(nResult));
+					
+				if (!(strcmp("LiveAmp64", sType)))
+					m_bIs64 = true;
+
+				nResult = ampSetProperty(m_Handle, PG_DEVICE, 0, DPROP_F32_BaseSampleRate,
+					&fSamplingRate, sizeof(fSamplingRate));
+				if (nResult != AMP_OK) 
+					throw std::runtime_error("Error setting sampling rate, error code:  " +
+						std::to_string(nResult));
+				m_fSamplingRate = fSamplingRate;
+				break;
+			}
+		}
+	}
+	return nRetVal;
 }
 
 void LiveAmp::enumerate(std::vector<std::pair<std::string, int>> &ampData, bool useSim){
 
-	int res;
+	int nRes;
 	char HWI[20];
 
 	if(!ampData.empty()){
@@ -136,75 +97,72 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>> &ampData, bool 
 		return;
 	}
 
-
 	if(useSim)
 		strcpy_s(HWI, "SIM");
 	else
 		strcpy_s(HWI, "ANY"); 
 
-	res = ampEnumerateDevices(HWI, sizeof(HWI), "LiveAmp", 0);
+	nRes = ampEnumerateDevices(HWI, sizeof(HWI), "LiveAmp", 0);
 
-	if (res <= 0)			
+	if (nRes <= 0)			
 		throw std::runtime_error("No LiveAmp connected");
 	else {
-		for(int i=0;i<res;i++){	
-			int result;
-			HANDLE hndl = NULL;
+		m_bWasEnumerated = true;
+		for(int i=0;i<nRes;i++)
+		{	
+			int nResult;
+			HANDLE handle = NULL;
 
-			result = ampOpenDevice(i, &hndl);
-			if(result != AMP_OK) {
+			nResult = ampOpenDevice(i, &handle);
+			if(nResult != AMP_OK) {
 				std::string msg = "Cannot open device: ";
-				msg.append (boost::lexical_cast<std::string>(i).c_str());
+				msg.append (std::to_string(i));
 				msg.append("  error= " );
-				msg.append(boost::lexical_cast<std::string>(res).c_str()); // TODO: error enumeration from liveamp driver
+				msg.append(std::to_string(nRes)); // TODO: error enumeration from liveamp driver
 				throw std::runtime_error(msg);
 			}		
 			
 			char sVar[20];
-			result = ampGetProperty(hndl, PG_DEVICE, i, DPROP_CHR_SerialNumber, sVar, sizeof(sVar)); 
-			if(result != AMP_OK) {
+			nResult = ampGetProperty(handle, PG_DEVICE, i, DPROP_CHR_SerialNumber, sVar, sizeof(sVar)); 
+			if(nResult != AMP_OK) {
 				std::string msg = "Cannot get device serial number: ";
-				msg.append (boost::lexical_cast<std::string>(i).c_str());
+				msg.append (std::to_string(i));
 				msg.append("  error= " );
-				msg.append(boost::lexical_cast<std::string>(res).c_str()); // TODO: error enumeration from liveamp driver
+				msg.append(std::to_string(nRes)); // TODO: error enumeration from liveamp driver
 				throw std::runtime_error(msg);
 			}		
 			else {
-		
+
 				int32_t nAvailableModules;
 				//int32_t nAvailableChannels;
-				result = ampGetProperty(hndl, PG_DEVICE, 0, DPROP_I32_AvailableModules, &nAvailableModules, sizeof(nAvailableModules));
-				int32_t iVar;
-				//result = ampGetProperty(hndl, PG_DEVICE, 0, DPROP_I32_AvailableChannels, &nAvailableChannels, sizeof(nAvailableChannels));
-				char modName[100];
+				nResult = ampGetProperty(handle, PG_DEVICE, 0, DPROP_I32_AvailableModules, &nAvailableModules, sizeof(nAvailableModules));
+				int32_t nVar;
+				char sModName[100];
 				int nTotalAvailableChannels = 0;
 				for (int j = 0; j < nAvailableModules; j++)
 				{
-					result = ampGetProperty(hndl, PG_MODULE, j, MPROP_I32_UseableChannels, &iVar, sizeof(iVar));
-					if (result != AMP_OK) {
+					nResult = ampGetProperty(handle, PG_MODULE, j, MPROP_I32_UseableChannels, &nVar, sizeof(nVar));
+					if (nResult != AMP_OK) {
 						std::string msg = "Cannot get device channel count: ";
-						msg.append(boost::lexical_cast<std::string>(j).c_str());
+						msg.append(std::to_string(j));
 						msg.append("  error= ");
-						msg.append(boost::lexical_cast<std::string>(res).c_str()); // TODO: error enumeration from liveamp driver
+						msg.append(std::to_string(nRes)); // TODO: error enumeration from liveamp driver
 						throw std::runtime_error(msg);
 					}
 					else
 					{
-						result = ampGetProperty(hndl, PG_MODULE, j, MPROP_CHR_Type, &modName, sizeof(modName));
-						if (strcmp(modName, "STE"))
-							nTotalAvailableChannels += iVar;
+						nResult = ampGetProperty(handle, PG_MODULE, j, MPROP_CHR_Type, &sModName, sizeof(sModName));
+						if (strcmp(sModName, "STE"))
+							nTotalAvailableChannels += nVar;
 					}
 				}
 				ampData.push_back(std::make_pair(std::string(sVar), nTotalAvailableChannels));
-			
 			}
-
-			// immediately close the device???
-			result = ampCloseDevice(hndl);
-			if(result != AMP_OK) {
+			nResult = ampCloseDevice(handle);
+			if(nResult != AMP_OK) {
 				std::string msg = "Cannot close device: ";
 				msg.append("  error= " );
-				msg.append(boost::lexical_cast<std::string>(result).c_str()); 
+				msg.append(std::to_string(nResult));
 				throw std::runtime_error(msg);
 			}
 		}
@@ -214,283 +172,238 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>> &ampData, bool 
 
 void LiveAmp::close(void){
 
-	int result = ampCloseDevice(h);
-	if(result != AMP_OK) {
+	int nResult = ampCloseDevice(m_Handle);
+	if(nResult != AMP_OK) {
 		std::string msg = "Cannot close device: ";
-		msg.append (serialNumber.c_str());
+		msg.append (m_sSerialNumber.c_str());
 		msg.append("  error= " );
-		msg.append(boost::lexical_cast<std::string>(result).c_str()); // TODO: error enumeration from liveamp driver
+		msg.append(std::to_string(nResult)); // TODO: error enumeration from liveamp driver
 		throw std::runtime_error(msg);
 	}
 }
 
-void LiveAmp::enableChannels(const std::vector<int>& eegIndicesIn, const std::vector<int>& bipolarIndicesIn, const std::vector<int>& auxIndicesIn, bool accEnable) {
+void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::vector<int>& pnBipolarIndices, const std::vector<int>& pnAuxIndices, bool bAccEnable) {
 	
-	int res;
-	int type;
-	int i;	
-	int enable, wasEnabled;
-	int bipType = CT_BIP;
-	char cValue[20]; // for determining if the aux channel is an accelerometer or not
-	char cUnit[256];
+	int nRes;
+	int nType;
+	int nEnable;
+	int nBipType = CT_BIP;
+	char sValue[20]; // for determining if the aux channel is an accelerometer or not
+	char sUnit[256];
 
-	if(!eegIndices.empty())eegIndices.clear();
-	if(!bipolarIndices.empty())bipolarIndices.clear();
-	if(!auxIndices.empty())auxIndices.clear();
-	if(!accIndices.empty())accIndices.clear();
-	if(!trigIndices.empty())trigIndices.clear();
-	enabledChannelCnt = 0;	
-	int passCnt = 0;
+	if(!m_pnEegIndices.empty())m_pnEegIndices.clear();
+	if(!m_pnBipolarIndices.empty())m_pnBipolarIndices.clear();
+	if(!m_pnAuxIndices.empty())m_pnAuxIndices.clear();
+	if(!m_pnAccIndices.empty())m_pnAccIndices.clear();
+	if(!m_pnTrigIndices.empty())m_pnTrigIndices.clear();
+	m_nEnabledChannelCnt = 0;	
 	
-	// make sure the liveamp has valid channels available
-	if(availableChannels == -1) {
-		throw std::runtime_error((std::string("Invalid number of available channels on device ") + serialNumber).c_str());
+	if(m_nAvailableChannels == -1) 
+	{
+		throw std::runtime_error((std::string("Invalid number of available channels on device ") + m_sSerialNumber).c_str());
 		return;
 	}
-	// first, disable all the channels
-	enable = 0;
-	for(i=0;i<availableChannels;i++)
-		res = ampSetProperty(h, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &enable, sizeof(enable));
+	nEnable = 0;
+	for(int i=0;i<m_nAvailableChannels;i++)
+		nRes = ampSetProperty(m_Handle, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &nEnable, sizeof(nEnable));
 
 	// go through the available channels and enable them if they are chosen
-	for(i=0;i<availableChannels;i++) {
-		enable = 0;
-		res = ampGetProperty(h, PG_CHANNEL, i, CPROP_I32_Type, &type, sizeof(type));
-		if(res != AMP_OK)					
-			throw std::runtime_error(("Error getting property for channel type: error code:  " + boost::lexical_cast<std::string>(res)).c_str());
-		res = ampGetProperty(h, PG_CHANNEL, i, CPROP_CHR_Unit, cUnit, sizeof(cUnit));
-		if (type == CT_EEG || type == CT_BIP) {
-			// go through the requested eeg channel vector and enable on match
-			passCnt = 0;
-			for(std::vector<int>::const_iterator it=eegIndicesIn.begin(); it!=eegIndicesIn.end();++it) {
-				if(*it==i){
-					enable = 1;
-					eegIndices.push_back(i);
-					++enabledChannelCnt;
-					passCnt++;
-					// I'm not sure if this check is necessary, but it's in the old code, so I am assuming it is
-					res = ampGetProperty(h, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &wasEnabled, sizeof(wasEnabled));
-					if (res != AMP_OK)								
-						throw std::runtime_error(("Error GetProperty enable for EEG channels, error: "  + boost::lexical_cast<std::string>(res)).c_str());	
-					
-					if(wasEnabled!=enable) {		
-						res = ampSetProperty(h, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &enable, sizeof(enable));
-						if (res != AMP_OK)				
-							throw std::runtime_error(("Error SetProperty enable for EEG channels, error: "  + boost::lexical_cast<std::string>(res)).c_str());	
-					}
-
-					//if(type == CT_BIP && bipolarEnable == true){
-					//	res = ampSetProperty(h, PG_CHANNEL, i, CPROP_I32_Type, &bipType, sizeof(bipType));
-					//	if (res != AMP_OK)								
-					//		throw std::runtime_error(("Error SetProperty enable BIPOLAR EEG channels, error: "  + boost::lexical_cast<std::string>(res)).c_str());	
-					//}
+	for(int i=0;i<m_nAvailableChannels;i++) 
+	{
+		nEnable = 0;
+		nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_I32_Type, &nType, sizeof(nType));
+		if(nRes != AMP_OK)					
+			throw std::runtime_error("Error getting property for channel type: error code:  " + std::to_string(nRes));
+		nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_CHR_Unit, sUnit, sizeof(sUnit));
+		if (nType == CT_EEG || nType == CT_BIP) {
+			for (std::vector<int>::const_iterator it = pnEegIndices.begin(); it != pnEegIndices.end(); ++it)
+			{
+				if (*it == i)
+				{
+					nEnable = 1;
+					nRes = ampSetProperty(m_Handle, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &nEnable, sizeof(nEnable));
+					if (nRes != AMP_OK)
+						throw std::runtime_error("Error SetProperty enable for EEG channels, error: " + std::to_string(nRes));
+					m_pnEegIndices.push_back(i);
+					++m_nEnabledChannelCnt;
 				}
 			}
 
-			for(std::vector<int>::const_iterator it=bipolarIndicesIn.begin(); it!=bipolarIndicesIn.end();++it) {
-				if(*it==i){
-					enable = 1;
-					bipolarIndices.push_back(i);
-					++enabledChannelCnt;
-					passCnt++;
-					// I'm not sure if this check is necessary, but it's in the old code, so I am assuming it is
-					res = ampGetProperty(h, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &wasEnabled, sizeof(wasEnabled));
-					if (res != AMP_OK)								
-						throw std::runtime_error(("Error GetProperty enable for EEG channels, error: "  + boost::lexical_cast<std::string>(res)).c_str());	
-					
-					if(wasEnabled!=enable) {		
-						res = ampSetProperty(h, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &enable, sizeof(enable));
-						if (res != AMP_OK)				
-							throw std::runtime_error(("Error SetProperty enable for EEG channels, error: "  + boost::lexical_cast<std::string>(res)).c_str());	
-					}
-
-			
-					res = ampSetProperty(h, PG_CHANNEL, i, CPROP_I32_Type, &bipType, sizeof(bipType));
-					if (res != AMP_OK)								
-						throw std::runtime_error(("Error SetProperty enable BIPOLAR EEG channels, error: "  + boost::lexical_cast<std::string>(res)).c_str());	
-					
+			for (std::vector<int>::const_iterator it = pnBipolarIndices.begin(); it != pnBipolarIndices.end(); ++it)
+			{
+				if (*it == i)
+				{
+					nEnable = 1;
+					nRes = ampSetProperty(m_Handle, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &nEnable, sizeof(nEnable));
+						if (nRes != AMP_OK)
+							throw std::runtime_error("Error SetProperty enable for EEG channels, error: " + std::to_string(nRes));
+					nRes = ampSetProperty(m_Handle, PG_CHANNEL, i, CPROP_I32_Type, &nBipType, sizeof(nBipType));
+					if (nRes != AMP_OK)
+						throw std::runtime_error("Error SetProperty enable BIPOLAR EEG channels, error: " + std::to_string(nRes));
+					m_pnBipolarIndices.push_back(i);
+					++m_nEnabledChannelCnt;
 				}
 			}
 		}
 
-		// if it is an aux channel see if it can/should be enabled and if it is an acc channel
-		if(type == CT_AUX){		
-			res = ampGetProperty(h, PG_CHANNEL, i, CPROP_CHR_Function, &cValue, sizeof(cValue));
+		if(nType == CT_AUX)
+		{		
+			nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_CHR_Function, &sValue, sizeof(sValue));
 			
-			if (res != AMP_OK)			
-				throw std::runtime_error(("Error GetProperty CPROP_CHR_Function error: "  + boost::lexical_cast<std::string>(res)).c_str());
+			if (nRes != AMP_OK)			
+				throw std::runtime_error("Error GetProperty CPROP_CHR_Function error: "  + std::to_string(nRes));
 			
 			// check that this aux channel is an acc channel
-			if(cValue[0] == 'X' || cValue[0] == 'Y' ||cValue[0] == 'Z' || cValue[0] == 'x' ||cValue[0] == 'y' ||cValue[0] == 'z') {
-				
+			if (sValue[0] == 'X' || sValue[0] == 'Y' || sValue[0] == 'Z' || sValue[0] == 'x' || sValue[0] == 'y' || sValue[0] == 'z')
+			{
 
-				enable = accEnable;
-				if(enable == 1){
-					accIndices.push_back(i);
-					++enabledChannelCnt;
-				}
-				res = ampGetProperty(h, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &wasEnabled, sizeof(wasEnabled));
-				if (res != AMP_OK)	
-					throw std::runtime_error(("Error SetProperty enable for ACC channels, error: "  + boost::lexical_cast<std::string>(res)).c_str());
-					
-				// if requested, enable it
-				if(wasEnabled!=enable){
-					res = ampSetProperty(h, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &enable, sizeof(enable));
-					if (res != AMP_OK)				
-						throw std::runtime_error(("Error SetProperty enable for ACC channels, error: "  + boost::lexical_cast<std::string>(res)).c_str());	
-				}
-				
+
+				nEnable = bAccEnable;
+				nRes = ampSetProperty(m_Handle, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &nEnable, sizeof(nEnable));
+				if (nRes != AMP_OK)
+					throw std::runtime_error("Error SetProperty enable for ACC channels, error: " + std::to_string(nRes));
+				m_pnAccIndices.push_back(i);
+				++m_nEnabledChannelCnt;
 			}
 
-			else { // this is a non-acc aux channel
-				
-				for (std::vector<int>::const_iterator it = auxIndicesIn.begin(); it != auxIndicesIn.end(); ++it) {
-					if (*it == i) {
-
-						enable = 1;
-						if (enable == 1) {
-							accIndices.push_back(i);
-							++enabledChannelCnt;
-						}
-						res = ampGetProperty(h, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &wasEnabled, sizeof(wasEnabled));
-						if (res != AMP_OK)
-							throw std::runtime_error(("Error SetProperty enable for AUX channels, error: " + boost::lexical_cast<std::string>(res)).c_str());
-
-						// if requested, enable it
-						if (wasEnabled != enable) {
-							res = ampSetProperty(h, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &enable, sizeof(enable));
-							if (res != AMP_OK)
-								throw std::runtime_error(("Error SetProperty enable for AUX channels, error: " + boost::lexical_cast<std::string>(res)).c_str());
-						}
+			else 
+			{ 
+				for (std::vector<int>::const_iterator it = pnAuxIndices.begin(); it != pnAuxIndices.end(); ++it)
+				{
+					if (*it == i) 
+					{
+						nEnable = 1;
+						nRes = ampSetProperty(m_Handle, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &nEnable, sizeof(nEnable));
+						if (nRes != AMP_OK)
+							throw std::runtime_error("Error SetProperty enable for AUX channels, error: " + std::to_string(nRes));
+						m_pnAccIndices.push_back(i);
+						++m_nEnabledChannelCnt;
 					}
 				}			
 			}			
 		}
 		
-		// the triggers are always enabled, but we need to keep track of them for channel labelling purposes
-		if(type == CT_TRG) {
-			trigIndices.push_back(i);	
-			++enabledChannelCnt;
+		if(nType == CT_TRG) {
+			m_pnTrigIndices.push_back(i);	
+			++m_nEnabledChannelCnt;
 		}
-		if (type == CT_DIG)
+		if (nType == CT_DIG)
 		{
-			++enabledChannelCnt;
+			++m_nEnabledChannelCnt;
 		}
 	}
 
-	// get the sample size in bytes and make an array of sample types
-	int dataType;
-	float resolution;
-	int channelType;
-	float gain;
-	int cnt = 0;
-	sampleSize=0;
-	int enabled;
+	int nDataType;
+	float fResolution;
+	int nChannelType;
+	float fGain;
+	int nCnt = 0;
+	m_nSampleSize=0;
+	int nEnabled;
 
-	res = ampStartAcquisition(h);
-	for(int i=0;i<availableChannels;i++) {
-		
-			
-		res = ampGetProperty(h, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &enabled, sizeof(enabled));
-		
-		if (enabled) {
-			res = ampGetProperty(h, PG_CHANNEL, i, CPROP_I32_DataType, &dataType, sizeof(dataType));
-			channelInfoArray[cnt].dataType = dataType;
-			res = ampGetProperty(h, PG_CHANNEL, i, CPROP_F32_Resolution, &resolution, sizeof(resolution));
-			channelInfoArray[cnt].resolution = resolution;
-			res = ampGetProperty(h, PG_CHANNEL, i, CPROP_I32_Type, &channelType, sizeof(channelType));
-			channelInfoArray[cnt].channelType = channelType;
-			res = ampGetProperty(h, PG_CHANNEL, i, CPROP_F32_Gain, &gain, sizeof(gain));
-			channelInfoArray[cnt].gain = gain;
-			cnt++;
-			switch (dataType)
+	nRes = ampStartAcquisition(m_Handle);
+	for (int i = 0; i < m_nAvailableChannels; i++)
+	{
+		nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &nEnabled, sizeof(nEnabled));
+
+		if (nEnabled)
+		{
+			nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_I32_DataType, &nDataType, sizeof(nDataType));
+			m_pChannelInfo[nCnt].m_nDataType = nDataType;
+			nRes = ampGetProperty(m_Handle , PG_CHANNEL, i, CPROP_F32_Resolution, &fResolution, sizeof(fResolution));
+			m_pChannelInfo[nCnt].m_fResolution = fResolution;
+			nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_I32_Type, &nChannelType, sizeof(nChannelType));
+			m_pChannelInfo[nCnt].m_nChannelType = nChannelType;
+			nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_F32_Gain, &fGain, sizeof(fGain));
+			m_pChannelInfo[nCnt].m_fGain = fGain;
+			nCnt++;
+			switch (nDataType)
 			{
 			case DT_INT16:
 			case DT_UINT16:
-				{
-					sampleSize += 2;
-				}
-				break;
+			{
+				m_nSampleSize += 2;
+			}
+			break;
 			case DT_INT32:
 			case DT_UINT32:
 			case DT_FLOAT32:
-				{
-					sampleSize += 4;				
-					
-				}
-				break;
+			{
+				m_nSampleSize += 4;
+
+			}
+			break;
 			case DT_INT64:
 			case DT_UINT64:
 			case DT_FLOAT64:
-				{
-					sampleSize += 8;
-				}
-				break;
+			{
+				m_nSampleSize += 8;
+			}
+			break;
 			default:
 				break;
 			}
 		}
-		
 	}
 	// add the sample counter size
-	sampleSize += 8;
-	res = ampStopAcquisition(h);
-	if(cnt!=enabledChannelCnt)
-		throw std::runtime_error((std::string("Error: Enabled channel counter mismatch in device ") + serialNumber).c_str());	
+	m_nSampleSize += 8;
+	nRes = ampStopAcquisition(m_Handle);
+	if(nCnt!=m_nEnabledChannelCnt)
+		throw std::runtime_error((std::string("Error: Enabled channel counter mismatch in device ") + m_sSerialNumber).c_str());	
 }
 
 void LiveAmp::startAcquisition(void){
 	
-	int res = ampStartAcquisition(h);
-	if(res != AMP_OK)					
-		throw std::runtime_error(("Error starting acquisition, error code:  " + boost::lexical_cast<std::string>(res)).c_str());
+	int nRes = ampStartAcquisition(m_Handle);
+	if(nRes != AMP_OK)					
+		throw std::runtime_error("Error starting acquisition, error code:  " + std::to_string(nRes));
 
 }
 
 void LiveAmp::stopAcquisition(void){
 	
-	int res = ampStopAcquisition(h);
-	if(res != AMP_OK)					
-		throw std::runtime_error(("Error stopping acquisition, error code:  " + boost::lexical_cast<std::string>(res)).c_str());
+	int nRes = ampStopAcquisition(m_Handle);
+	if(nRes != AMP_OK)					
+		throw std::runtime_error("Error stopping acquisition, error code:  " + std::to_string(nRes));
 
 }
 
-int64_t LiveAmp::pullAmpData(BYTE* buffer, int bufferSize){
-	int64_t samplesRead = ampGetData(h, buffer, bufferSize, 0); 
-	return samplesRead;
+int64_t LiveAmp::pullAmpData(BYTE* pBuffer, int nBufferSize){
+	int64_t nSamplesRead = ampGetData(m_Handle, pBuffer, nBufferSize, 0); 
+	return nSamplesRead;
 }
 
 // TODO: overload this function to support other data types, maybe use a std::vector<T> for this?
-void LiveAmp::pushAmpData(BYTE* buffer, int bufferSize, int64_t samplesRead, std::vector<std::vector<float>> &outData)
+void LiveAmp::pushAmpData(BYTE* pBuffer, int nBufferSize, int64_t nSamplesRead, std::vector<std::vector<float>> &pfOutData)
 {
-	uint64_t sc;
+	uint64_t nSampleCount;
 	
-	int offset = 0;
-	float sample = 0;
-	int triggTmp = 0;
+	int nOffset = 0;
+	float fSample = 0;
+	int nTriggTmp = 0;
 	int isSecondBit = 0;
 
-	int64_t numSamples = samplesRead / sampleSize;
+	int64_t nNumSamples = nSamplesRead / m_nSampleSize;
 		
-	std::vector<float> tmpData;
+	std::vector<float> pfTmpData;
 
-	for (int s = 0; s < numSamples; s++)
+	for (int s = 0; s < nNumSamples; s++)
 	{
-		offset = 0;
-		sc = *(uint64_t*)&buffer[s*sampleSize + offset];				
-		offset += 8; // sample counter offset 
+		nOffset = 0;
+		nSampleCount = *(uint64_t*)&pBuffer[s * m_nSampleSize + nOffset];
+		nOffset += 8; // sample counter offset 
 
-		tmpData.resize(enabledChannelCnt + ((m_bUseSampleCounter) ? 1 : 0));
+		pfTmpData.resize(m_nEnabledChannelCnt + ((m_bUseSampleCounter) ? 1 : 0));
 
-		for (int i=0; i < enabledChannelCnt; i++)
+		for (int i=0; i < m_nEnabledChannelCnt; i++)
 		{
-			switch (channelInfoArray[i].dataType)
+			switch (m_pChannelInfo[i].m_nDataType)
 			{
 				case DT_INT16:
 					{
-						int16_t tmp = *(int16_t*)&buffer[s*sampleSize + offset];
-						sample = (float) tmp * channelInfoArray[i].resolution;
-						offset += 2;
+					int16_t tmp = *(int16_t*)&pBuffer[s * m_nSampleSize + nOffset];
+						fSample = (float) tmp * m_pChannelInfo[i].m_fResolution;
+						nOffset += 2;
 						break;
 					}
 				case DT_UINT16:
@@ -498,75 +411,75 @@ void LiveAmp::pushAmpData(BYTE* buffer, int bufferSize, int64_t samplesRead, std
 					// note: in the case of liveamp, this floating point sample
 					// will need to be converted back to an integer and &ed with the
 					// second bit for the true value of the trigger
-						uint16_t tmp = *(uint16_t*)&buffer[s*sampleSize + offset];
-						sample = (float) tmp * channelInfoArray[i].resolution;
-						if (((int)sample>>8) == 254)
+						uint16_t tmp = *(uint16_t*)&pBuffer[s*m_nSampleSize + nOffset];
+						fSample = (float) tmp * m_pChannelInfo[i].m_fResolution;
+						if (((int)fSample>>8) == 254)
 							tmp = tmp;
-						offset += 2;
+						nOffset += 2;
 						break;
 					}					
 				case DT_INT32:
 					{
-						int32_t tmp = *(int32_t*)&buffer[s*sampleSize + offset];
-						sample = (float)(tmp) * channelInfoArray[i].resolution;
-						offset += 4;
+						int32_t tmp = *(int32_t*)&pBuffer[s * m_nSampleSize + nOffset];
+						fSample = (float)tmp * m_pChannelInfo[i].m_fResolution;
+						nOffset += 4;
 						break;
 					}
 				case DT_UINT32:
 					{
-						uint32_t tmp = *(uint32_t*)&buffer[s*sampleSize + offset];
-						sample = (float) tmp * channelInfoArray[i].resolution;
-						offset += 4;
+						uint32_t tmp = *(uint32_t*)&pBuffer[s * m_nSampleSize + nOffset];
+						fSample = (float)tmp * m_pChannelInfo[i].m_fResolution;
+						nOffset += 4;
 						break;
 					}
 				case DT_FLOAT32:
 					{
-						float tmp = *(float*)&buffer[s*sampleSize + offset];
-						sample = (float) tmp * channelInfoArray[i].resolution;
-						offset += 4;
+						float tmp = *(float*)&pBuffer[s * m_nSampleSize + nOffset];
+						fSample = (float)tmp * m_pChannelInfo[i].m_fResolution;
+						nOffset += 4;
 						break;
 					}
 				case DT_INT64:
 					{
-						int64_t tmp = *(int64_t*)&buffer[s*sampleSize + offset];
-						sample = (float) tmp * channelInfoArray[i].resolution;
-						offset += 8;
+						int64_t tmp = *(int64_t*)&pBuffer[s * m_nSampleSize + nOffset];
+						fSample = (float)tmp * m_pChannelInfo[i].m_fResolution;
+						nOffset += 8;
 						break;
 					}
 				case DT_UINT64:
 					{
-						uint64_t tmp = *(uint64_t*)&buffer[s*sampleSize + offset];
-						sample = (float) tmp * channelInfoArray[i].resolution;
-						offset += 8;
+						uint64_t tmp = *(uint64_t*)&pBuffer[s * m_nSampleSize + nOffset];
+						fSample = (float)tmp * m_pChannelInfo[i].m_fResolution;
+						nOffset += 8;
 						break;
 					}
 				case DT_FLOAT64:
 					{
 						
-						float tmp = *(float*)&buffer[s*sampleSize + offset];
-						sample = (float) tmp * channelInfoArray[i].resolution;
-						offset += 8;
+						float tmp = *(float*)&pBuffer[s * m_nSampleSize + nOffset];
+						fSample = (float)tmp * m_pChannelInfo[i].m_fResolution;
+						nOffset += 8;
 						break;					
 					}					
 				default:
 					break;
 			}
 
-			tmpData[i] = sample;
+			pfTmpData[i] = fSample;
 		}
 		if (m_bUseSampleCounter)
-			tmpData[enabledChannelCnt] = (float)sc;
-		outData.push_back(tmpData);
+			pfTmpData[m_nEnabledChannelCnt] = (float)nSampleCount;
+		pfOutData.push_back(pfTmpData);
 	}
 }
 
-void LiveAmp::setOutTriggerMode(t_TriggerOutputMode mode, int syncPin, int freq, int pulseWidth)
+void LiveAmp::setOutTriggerMode(t_TriggerOutputMode triggerMode, int nSyncPin, int nFreq, int nPulseWidth)
 {
-	if (!bHasSTE)return;
-	int per = samplingRate / freq;
-	int res = ampSetProperty(h, PG_MODULE, STEIdx, MPROP_I32_TriggerOutMode, &mode, sizeof(mode));
-	res = ampSetProperty(h, PG_MODULE, STEIdx, MPROP_I32_TriggerSyncPin, &syncPin, sizeof(syncPin));
-	res = ampSetProperty(h, PG_MODULE, STEIdx, MPROP_I32_TriggerSyncPeriod, &per, sizeof(per));
-	res = ampSetProperty(h, PG_MODULE, STEIdx, MPROP_I32_TriggerSyncPin, &pulseWidth, sizeof(pulseWidth));
+	if (!m_bHasSTE)return;
+	int nPer = m_fSamplingRate / nFreq;
+	int res = ampSetProperty(m_Handle, PG_MODULE, m_nSTEIdx, MPROP_I32_TriggerOutMode, &triggerMode, sizeof(triggerMode));
+	res = ampSetProperty(m_Handle, PG_MODULE, m_nSTEIdx, MPROP_I32_TriggerSyncPin, &nSyncPin, sizeof(nSyncPin));
+	res = ampSetProperty(m_Handle, PG_MODULE, m_nSTEIdx, MPROP_I32_TriggerSyncPeriod, &nPer, sizeof(nPer));
+	res = ampSetProperty(m_Handle, PG_MODULE, m_nSTEIdx, MPROP_I32_TriggerSyncPin, &nPulseWidth, sizeof(nPulseWidth));
 }
 
