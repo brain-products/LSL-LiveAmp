@@ -121,6 +121,7 @@ private:
 	struct t_AppVersion {
 		int32_t Major;
 		int32_t Minor;
+		int32_t Bugfix;
 	};
 	t_AppVersion m_AppVersion;
 

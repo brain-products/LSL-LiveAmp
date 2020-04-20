@@ -20,7 +20,7 @@ private:
 	HANDLE h;                        // device handle
 	std::string serialNumber;        // serial number
 	int availableChannels;           // number of available channels
-	int usableChannels;				 // whether we are liveamp 8, 16, 32, 64
+	//int usableChannels;				 // whether we are liveamp 8, 16, 32, 64
 	int availableModules;            // use to detect STE box
 	bool bHasSTE;                    // actual flag for STE connected
 	int STEIdx;                      // index of which module is the STE
@@ -101,7 +101,7 @@ public:
 	inline int               getEnabledChannelCnt(void){return enabledChannelCnt;}
 	//inline int*              getDataTypeArray(void){return dataTypeArray;}  
 	inline int               getSampleSize(void){return sampleSize;}
-	inline int				 getUsableChannels(void){return usableChannels;}
+	//inline int				 getUsableChannels(void){return usableChannels;}
 	inline bool				 isClosed(void){return bIsClosed;}
 	inline bool              hasSTE(void) { return bHasSTE; }
 	inline bool              is64(void) { return bIs64; }

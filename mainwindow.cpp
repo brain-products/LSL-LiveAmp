@@ -17,7 +17,7 @@
 
 #define LIBVERSIONSTREAM(version) version.Major << "." << version.Minor << "." << version.Build << "." << version.Revision
 #define LSLVERSIONSTREAM(version) (version/100) << "." << (version%100)
-#define APPVERSIONSTREAM(version) version.Major << "." << version.Minor
+#define APPVERSIONSTREAM(version) version.Major << "." << version.Minor << "." << version.Bugfix
 
 const int sampling_rates[] = {250,500,1000};
 
@@ -26,6 +26,8 @@ int LiveAmp_SampleSize(HANDLE hDevice, int *typeArray, int* usedChannelsCnt);
 MainWindow::MainWindow(QWidget *parent, const std::string &config_file): QMainWindow(parent),ui(new Ui::MainWindow) {
 	m_AppVersion.Major = 1;
 	m_AppVersion.Minor = 18;
+	m_AppVersion.Bugfix = 1;
+
 	overrideAutoUpdate = false;
 	ui->setupUi(this);
 	// parse startup config file

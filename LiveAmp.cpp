@@ -65,11 +65,15 @@ LiveAmp::LiveAmp(std::string serialNumberIn, float samplingRateIn, bool useSim, 
 					if (result != AMP_OK)
 						throw std::runtime_error(("Error getting available channel count, error code:  " + boost::lexical_cast<std::string>(result)).c_str());
 
-					// set the usable channels               // this property name is misspelled in the API---we use the correct spelling locally
-					result = ampGetProperty(h, PG_MODULE, 0, MPROP_I32_UseableChannels, &usableChannels, sizeof(usableChannels));
-					if (result != AMP_OK)
-						throw std::runtime_error(("Error getting usable channel count, error code:  " + boost::lexical_cast<std::string>(result)).c_str());
+					//// set the usable channels               // this property name is misspelled in the API---we use the correct spelling locally
+					//result = ampGetProperty(h, PG_MODULE, 0, MPROP_I32_UseableChannels, &usableChannels, sizeof(usableChannels));
+					//if (result != AMP_OK)
+					//	throw std::runtime_error(("Error getting usable channel count, error code:  " + boost::lexical_cast<std::string>(result)).c_str());
 
+					// set the usable channels               // this property name is misspelled in the API---we use the correct spelling locally
+					result = ampGetProperty(h, PG_DEVICE, 0, DPROP_I32_AvailableModules, &availableModules, sizeof(availableModules));
+					if (result != AMP_OK)
+						throw std::runtime_error(("Error getting available module channel count, error code:  " + boost::lexical_cast<std::string>(result)).c_str());
 					// detect whether or not STE is connected
 					char modName[100];
 					
