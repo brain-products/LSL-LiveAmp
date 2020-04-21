@@ -5,6 +5,7 @@ LiveAmp/Debug/
 LiveAmp/Release/
 LiveAmp/Resources/
 LiveAmp/x64/
+LiveAmp/*.cfg
 *.dll
 *.exe
 *.aps

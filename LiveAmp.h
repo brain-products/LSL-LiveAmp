@@ -27,25 +27,21 @@ private:
 		int m_nChannelType;
 		float m_fGain;
 	}t_channelInfo;
-	// int dataTypeArray[100];
 	t_channelInfo m_pChannelInfo[100];
-	int m_nSampleSize;
-
-
-	// flexible? channel access arrays
-	std::vector<int> m_pnChannelIndexes;  
+	
 	std::vector<int> m_pnEegIndices;
 	std::vector<int> m_pnBipolarIndices;
 	std::vector<int> m_pnAuxIndices;
 	std::vector<int> m_pnAccIndices;
 	std::vector<int> m_pnTrigIndices;
 
+	int m_nSampleSize;
 	int m_nEnabledChannelCnt;
+	int m_nSampleCounterIdxInPush;
 	bool m_bIsClosed;
 	bool m_bIs64;
 	bool m_bUseSampleCounter;
 	bool m_bWasEnumerated;
-	
 
 public:
 
@@ -56,7 +52,7 @@ public:
 	void enumerate(std::vector<std::pair<std::string, int>> &ampData, bool useSim=false);
 
 	//
-	int Setup(std::string serialNumberIn, float samplingRateIn = 500, bool useSim = false, int recordingModeIn = RM_NORMAL);
+	int Setup(std::string serialNumberIn, float samplingRateIn = 500, bool bUseSampleCounter = false, bool useSim = false, int recordingModeIn = RM_NORMAL);
 
 	// close live amp device
 	void close();

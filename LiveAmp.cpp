@@ -1,12 +1,12 @@
 #include "LiveAmp.h"
 
-int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSim, int nRecordingMode) {
+int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSampleCounter, bool bUseSim, int nRecordingMode) {
 
 	char HWI[20];	
 	m_bIsClosed = false;
 	m_bHasSTE = false;
 	m_bIs64 = false;
-	m_bUseSampleCounter = false;
+	m_bUseSampleCounter = bUseSampleCounter;
 	if(bUseSim)
 		strcpy_s(HWI, "SIM");
 	else
@@ -17,7 +17,7 @@ int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSim,
 	if (!m_bWasEnumerated)
 	{
 		nRes = ampEnumerateDevices(HWI, sizeof(HWI), "LiveAmp", 0);
-		m_bWasEnumerated = false;
+		m_bWasEnumerated = true;
 	}
 
 	if (nRes <= 0)
@@ -258,12 +258,15 @@ void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::ve
 			{
 
 
-				nEnable = bAccEnable;
-				nRes = ampSetProperty(m_Handle, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &nEnable, sizeof(nEnable));
-				if (nRes != AMP_OK)
-					throw std::runtime_error("Error SetProperty enable for ACC channels, error: " + std::to_string(nRes));
-				m_pnAccIndices.push_back(i);
-				++m_nEnabledChannelCnt;
+				if (bAccEnable)
+				{
+					nEnable = 1;
+					nRes = ampSetProperty(m_Handle, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &nEnable, sizeof(nEnable));
+					if (nRes != AMP_OK)
+						throw std::runtime_error("Error SetProperty enable for ACC channels, error: " + std::to_string(nRes));
+					m_pnAccIndices.push_back(i);
+					++m_nEnabledChannelCnt;
+				}
 			}
 
 			else 
@@ -276,7 +279,7 @@ void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::ve
 						nRes = ampSetProperty(m_Handle, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &nEnable, sizeof(nEnable));
 						if (nRes != AMP_OK)
 							throw std::runtime_error("Error SetProperty enable for AUX channels, error: " + std::to_string(nRes));
-						m_pnAccIndices.push_back(i);
+						m_pnAuxIndices.push_back(i);
 						++m_nEnabledChannelCnt;
 					}
 				}			
@@ -292,6 +295,11 @@ void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::ve
 			++m_nEnabledChannelCnt;
 		}
 	}
+
+	m_nSampleCounterIdxInPush = m_pnEegIndices.size() +
+		m_pnBipolarIndices.size() +
+		m_pnAccIndices.size() +
+		m_pnAuxIndices.size() + 3;
 
 	int nDataType;
 	float fResolution;
@@ -393,7 +401,7 @@ void LiveAmp::pushAmpData(BYTE* pBuffer, int nBufferSize, int64_t nSamplesRead, 
 		nSampleCount = *(uint64_t*)&pBuffer[s * m_nSampleSize + nOffset];
 		nOffset += 8; // sample counter offset 
 
-		pfTmpData.resize(m_nEnabledChannelCnt + ((m_bUseSampleCounter) ? 1 : 0));
+		pfTmpData.resize(m_nEnabledChannelCnt);
 
 		for (int i=0; i < m_nEnabledChannelCnt; i++)
 		{
@@ -468,7 +476,7 @@ void LiveAmp::pushAmpData(BYTE* pBuffer, int nBufferSize, int64_t nSamplesRead, 
 			pfTmpData[i] = fSample;
 		}
 		if (m_bUseSampleCounter)
-			pfTmpData[m_nEnabledChannelCnt] = (float)nSampleCount;
+			pfTmpData[m_nSampleCounterIdxInPush] = (float)nSampleCount;
 		pfOutData.push_back(pfTmpData);
 	}
 }

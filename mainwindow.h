@@ -6,7 +6,6 @@
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
 #include <QtCore/QThread>
-#include <boost/shared_ptr.hpp>
 #include <thread>
 #include <string>
 #include <vector>
@@ -40,7 +39,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
     
 public:
-    explicit MainWindow(QWidget *parent, const std::string &config_file);
+    explicit MainWindow(QWidget *parent, const char* config_file);
     ~MainWindow();
     
 
@@ -56,6 +55,7 @@ private slots:
 	void UpdateChannelLabelsWithBipolar(int);
 	void UpdateChannelLabelsAux(int);
 	void UpdateChannelLabelsAcc(bool);
+	void UpdateChannelLabelsSampleCounter(bool);
 	void ChooseDevice(int which);
 	void RadioButtonBehavior(bool b);
 
@@ -72,6 +72,9 @@ private:
 	struct t_AmpConfiguration
 	{
 		std::string m_sSerialNumber;
+		int m_nEEGChannelCount;
+		int m_nBipolarChannelCount;
+		int m_nAuxChannelCount;
 		double m_dSamplingRate;
 		int m_nChunkSize;
 		std::vector<std::string> m_psChannelLabels;
@@ -81,6 +84,8 @@ private:
 		bool m_bUnsampledMarkers;
 		bool m_bSampledMarkersEEG;
 		bool m_bUseACC;
+		bool m_bUseSampleCounter;
+		bool m_bIsSTEInDefault;
 		bool m_bUseSim;
 	};
 
@@ -101,14 +106,9 @@ private:
 	void UpdateChannelCounters(int n);
 	void WaitMessage();
 	void UpdateChannelLabels(void);
-//	void ReadThread(int chunkSize, int samplingRate, std::vector<std::string> channelLabels);
 	void ReadThread(t_AmpConfiguration ampConfiguration);
-	void LoadConfig(const std::string &filename);
-	template <typename T>
-	void LoadConfigImpl(T tPropertyTree);
-    void SaveConfig(const std::string &filename);
-	template <typename T>
-	void SaveConfigImpl(T tPropertyTree);
+	void LoadConfig(const QString& filename);
+	void SaveConfig(const QString& filename);
 };
 
 #endif // MAINWINDOW_H
