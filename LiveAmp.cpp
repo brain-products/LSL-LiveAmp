@@ -286,12 +286,17 @@ void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::ve
 			}			
 		}
 		
-		if(nType == CT_TRG) {
+		if(nType == CT_TRG) 
+		{
+			nEnable = 1;
+			nRes = ampSetProperty(m_Handle, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &nEnable, sizeof(nEnable));
 			m_pnTrigIndices.push_back(i);	
 			++m_nEnabledChannelCnt;
 		}
 		if (nType == CT_DIG)
 		{
+			nEnable = 1;
+			nRes = ampSetProperty(m_Handle, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &nEnable, sizeof(nEnable));
 			++m_nEnabledChannelCnt;
 		}
 	}
@@ -486,8 +491,9 @@ void LiveAmp::setOutTriggerMode(t_TriggerOutputMode triggerMode, int nSyncPin, i
 	if (!m_bHasSTE)return;
 	int nPer = m_fSamplingRate / nFreq;
 	int res = ampSetProperty(m_Handle, PG_MODULE, m_nSTEIdx, MPROP_I32_TriggerOutMode, &triggerMode, sizeof(triggerMode));
+
 	res = ampSetProperty(m_Handle, PG_MODULE, m_nSTEIdx, MPROP_I32_TriggerSyncPin, &nSyncPin, sizeof(nSyncPin));
 	res = ampSetProperty(m_Handle, PG_MODULE, m_nSTEIdx, MPROP_I32_TriggerSyncPeriod, &nPer, sizeof(nPer));
-	res = ampSetProperty(m_Handle, PG_MODULE, m_nSTEIdx, MPROP_I32_TriggerSyncPin, &nPulseWidth, sizeof(nPulseWidth));
+	res = ampSetProperty(m_Handle, PG_MODULE, m_nSTEIdx, MPROP_I32_TriggerSyncWidth, &nPulseWidth, sizeof(nPulseWidth));
 }
 

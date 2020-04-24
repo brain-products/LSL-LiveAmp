@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent, const char* config_file): QMainWindow(pa
 	
 	m_AppVersion.Major = 1;
 	m_AppVersion.Minor = 19;
-	m_AppVersion.Bugfix = 0;
+	m_AppVersion.Bugfix = 1;
 
 	m_bOverrideAutoUpdate = false;
 	ui->setupUi(this);
@@ -44,7 +44,7 @@ MainWindow::MainWindow(QWidget *parent, const char* config_file): QMainWindow(pa
 	QObject::connect(ui->linkButton, SIGNAL(clicked()), this, SLOT(Link()));
 	QObject::connect(ui->actionLoad_Configuration, SIGNAL(triggered()), this, SLOT(LoadConfigDialog()));
 	QObject::connect(ui->actionSave_Configuration, SIGNAL(triggered()), this, SLOT(SaveConfigDialog()));
-	QObject::connect(ui->actionVersions, SIGNAL(triggered()), this, SLOT(VersionsCialog()));
+	QObject::connect(ui->actionVersions, SIGNAL(triggered()), this, SLOT(VersionsDialog()));
 	QObject::connect(ui->refreshDevices,SIGNAL(clicked()),this,SLOT(RefreshDevices()));
 	QObject::connect(ui->eegChannelCount, SIGNAL(valueChanged(int)),this, SLOT(UpdateChannelLabelsWithEeg(int)));
 	QObject::connect(ui->bipolarChannelCount, SIGNAL(valueChanged(int)),this, SLOT(UpdateChannelLabelsWithBipolar(int)));
@@ -54,6 +54,7 @@ MainWindow::MainWindow(QWidget *parent, const char* config_file): QMainWindow(pa
 	QObject::connect(ui->sampleCounter, SIGNAL(clicked(bool)), this, SLOT(UpdateChannelLabelsSampleCounter(bool)));
 	QObject::connect(ui->rbSync, SIGNAL(clicked(bool)), this, SLOT(RadioButtonBehavior(bool)));
 	QObject::connect(ui->rbMirror, SIGNAL(clicked(bool)), this, SLOT(RadioButtonBehavior(bool)));
+	
 }
 
 void MainWindow::UpdateChannelCounters(int n)
@@ -126,8 +127,8 @@ void MainWindow::UpdateChannelLabels(void)
 		ui->channelLabels->appendPlainText(str.c_str());
 	}
 
-	if (nAcc == 3) 
-		ui->channelLabels->appendPlainText("ACC_X\nACC_Y\nACC_Z");
+	//if (nAcc == 3) 
+	//	ui->channelLabels->appendPlainText("ACC_X\nACC_Y\nACC_Z");
 
 	//if (bUseSampleCounter)
 	//{
@@ -173,7 +174,7 @@ void MainWindow::VersionsDialog()
 	ss << "Amplifier_LIB: " << LIBVERSIONSTREAM(libVersion)  << "\n" <<
 		  "lsl protocol: " << LSLVERSIONSTREAM(lslProtocolVersion) << "\n" <<
 		  "liblsl: " << LSLVERSIONSTREAM(lslLibVersion) << "\n" <<
-		  "App: " << APPVERSIONSTREAM(m_AppVersion) << "_beta";
+		  "App: " << APPVERSIONSTREAM(m_AppVersion);
 	QMessageBox::information(this, "Versions", ss.str().c_str(), QMessageBox::Ok);
 }
 
@@ -184,7 +185,7 @@ void MainWindow::UpdateChannelLabelsAux(int n)
 
 void MainWindow::UpdateChannelLabelsAcc(bool b) 
 {
-	UpdateChannelLabels();
+	//UpdateChannelLabels();
 }
 
 void MainWindow::UpdateChannelLabelsSampleCounter(bool b)
@@ -202,7 +203,7 @@ void MainWindow::LoadConfig(const QString& filename)
 {
 	QSettings pt(filename, QSettings::IniFormat);
 
-	ui->deviceSerialNumber->setText(pt.value("settings/deviceSerialNumber", "x-0077").toString());
+	ui->deviceSerialNumber->setText(pt.value("settings/serialnumber", "x-0077").toString());
 	ui->eegChannelCount->setValue(pt.value("settings/channelcount", 32).toInt());
 	m_nEegChannelCount = ui->eegChannelCount->value();
 	ui->bipolarChannelCount->setValue(pt.value("settings/bipolarcount", 0).toInt());
@@ -231,7 +232,7 @@ void MainWindow::SaveConfig(const QString& filename)
 {
 	QSettings pt(filename, QSettings::IniFormat);
 	pt.beginGroup("settings");
-	pt.setValue("deviceSerialNumber", ui->deviceSerialNumber->text());
+	pt.setValue("serialnumber", ui->deviceSerialNumber->text());
 	pt.setValue("channelcount", ui->eegChannelCount->value());
 	pt.setValue("bipolarcount", ui->bipolarChannelCount->value());
 	pt.setValue("chunksize", ui->chunkSize->value());
@@ -266,6 +267,39 @@ void MainWindow::RadioButtonBehavior(bool b)
 	{
 		ui->sbSyncFreq->setEnabled(false);
 		m_TriggerOutputMode = TM_DEFAULT;
+	}
+}
+
+void MainWindow::HandleListenerException(std::exception e)
+{
+	QMessageBox::critical(this, "Error", (std::string("Error in acquisition loop: ") += e.what()).c_str(), QMessageBox::Ok);
+	ResetGuiEnabling(true);
+}
+
+void MainWindow::ResetGuiEnabling(bool b)
+{
+	if (b == false)
+	{
+		ui->channelLabels->setEnabled(false);
+		ui->overwriteChannelLabels->setEnabled(false);
+		ui->STESettings->setEnabled(false);
+		ui->allDeviceSettings->setEnabled(false);
+		ui->scanGroup->setEnabled(false);
+		ui->triggerStyleGroup->setEnabled(false);
+		ui->linkButton->setEnabled(true);
+		ui->linkButton->setText("Unlink");
+	}
+	else
+	{
+		ui->channelLabels->setEnabled(true);
+		ui->overwriteChannelLabels->setEnabled(true);
+		ui->STESettings->setEnabled(true);
+		ui->allDeviceSettings->setEnabled(true);
+		ui->scanGroup->setEnabled(true);
+		ui->triggerStyleGroup->setEnabled(true);
+		ui->linkButton->setEnabled(true);
+		ui->linkButton->setText("Link");
+		
 	}
 }
 
@@ -356,7 +390,8 @@ void MainWindow::Link()
 			m_bStop = true;
 			m_ptReaderThread->join();
 			m_ptReaderThread.reset();
-			int res = SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
+			//emit StopListenerLoop();
+			//int res = SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
 		} 
 		catch(std::exception &e) 
 		{
@@ -364,11 +399,8 @@ void MainWindow::Link()
 			return;
 		}
 		this->setWindowTitle("LiveAmp Connector");
-		ui->channelLabels->setEnabled(true);
-		ui->overwriteChannelLabels->setEnabled(true);
-		ui->STESettings->setEnabled(true);
-		ui->allDeviceSettings->setEnabled(true);
-		ui->linkButton->setText("Link");
+		ResetGuiEnabling(true);
+
 	}
 	else 
 	{
@@ -387,6 +419,8 @@ void MainWindow::Link()
 			ampConfiguration.m_bUnsampledMarkers = ui->unsampledMarkers->checkState() == Qt::Checked;
 			ampConfiguration.m_bSampledMarkersEEG = ui->sampledMarkersEEG->checkState()==Qt::Checked;
 			ampConfiguration.m_bIsSTEInDefault = (ui->rbDefault->isChecked());
+			ampConfiguration.m_bIsSTEInMirror = (ui->rbMirror->isChecked());
+			ampConfiguration.m_bIsSTEInSync = (ui->rbSync->isChecked());
 
 			std::vector<std::string> psChannelLabels;
 			std::string str;
@@ -394,7 +428,6 @@ void MainWindow::Link()
 			std::istringstream iss(ui->channelLabels->toPlainText().toStdString());
 			while (std::getline(iss, str, '\n'))
 				psChannelLabels.push_back(str);
-			//boost::algorithm::split(psChannelLabels,ui->channelLabels->toPlainText().toStdString(),boost::algorithm::is_any_of("\n"));
 			ampConfiguration.m_psChannelLabels = psChannelLabels;
 
 			std::vector<std::string> psEegChannelLabels;
@@ -417,15 +450,6 @@ void MainWindow::Link()
 			ampConfiguration.m_psBipolarChannelLabels = psBipolarChannelLabels;
 			ampConfiguration.m_psAuxChannelLabels = psAuxChannelLabels;
 
-			if (ampConfiguration.m_psEegChannelLabels.size() != ui->eegChannelCount->value()) {
-				QMessageBox::critical(this, "Error", "The number of eeg channels labels does not match the eeg channel count device setting.", QMessageBox::Ok);
-				return;
-			}
-
-			if (ampConfiguration.m_psBipolarChannelLabels.size() != ui->bipolarChannelCount->value()) {
-				QMessageBox::critical(this, "Error", "The number of bipolar channels labels does not match the bipolar channel count device setting.", QMessageBox::Ok);
-				return;
-			}
 			t_VersionNumber version;
 			GetLibraryVersion(&version);
 			std::cout << "Library Version " << LIBVERSIONSTREAM(version) << std::endl;
@@ -461,7 +485,8 @@ void MainWindow::Link()
 							tr("A sampling rate of 1kHz is not recommended for LiveAmp64"),
 							QMessageBox::Ok);
 				}
-				m_LiveAmp.setOutTriggerMode(m_TriggerOutputMode, 8, ui->sbSyncFreq->value(), 5);
+				int nPulseWidth = (int)(.01 * fSamplingRate);
+				m_LiveAmp.setOutTriggerMode(m_TriggerOutputMode, 0, ui->sbSyncFreq->value(), nPulseWidth);
 
 				std::vector<int> eegIndices;
 				for (int i = 0; i < ampConfiguration.m_psEegChannelLabels.size(); i++)
@@ -486,15 +511,20 @@ void MainWindow::Link()
 				this->setCursor(Qt::ArrowCursor);
 				// start reader thread
 				m_bStop = false;
+
+				
+				//m_pListenThread.reset(new ListenThread());
+				//m_pListenThread = new ListenThread();
+				//m_pListenThread->Setup(ampConfiguration, m_LiveAmp);
+				//QObject::connect(m_pListenThread, SIGNAL(RethrowListenerException(std::exception e)), this, SLOT(HandleListenerException(std::exception e)));
+				//QObject::connect(this, SIGNAL(StopListenerLoop()), m_pListenThread, SLOT(StopLoop()));
+				//QObject::connect(m_pListenThread, SIGNAL(finished()), this, SLOT(deleteLater()));
+				//m_pListenThread->start();
+
 				m_ptReaderThread.reset(new std::thread(&MainWindow::ReadThread, this, ampConfiguration));
 
 				this->setWindowTitle(("Streaming from LiveAmp " + sSerialNumber).c_str() );
-				ui->channelLabels->setEnabled(false);
-				ui->overwriteChannelLabels->setEnabled(false);
-				ui->STESettings->setEnabled(false);
-				ui->allDeviceSettings->setEnabled(false);
-				ui->linkButton->setEnabled(true);
-				ui->linkButton->setText("Unlink");
+				ResetGuiEnabling(false);
 			}
 		}
 		catch(std::exception &e) 
@@ -504,12 +534,7 @@ void MainWindow::Link()
 			//if(m_LiveAmp.getHandle()!=NULL)m_LiveAmp.close();
 			QMessageBox::critical(this,"Error",(std::string("Could not perform Link action: ")+=e.what()).c_str(),QMessageBox::Ok);
 			this->setWindowTitle("LiveAmp Connector");
-			ui->channelLabels->setEnabled(true);
-			ui->overwriteChannelLabels->setEnabled(true);
-			ui->STESettings->setEnabled(true);
-			ui->allDeviceSettings->setEnabled(true);
-			ui->linkButton->setEnabled(true);
-			ui->linkButton->setText("Link");
+			ResetGuiEnabling(true);
 			this->setCursor(Qt::ArrowCursor);
 			return;
 		}
@@ -520,50 +545,36 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 {
 
 	lsl::stream_outlet *pMarkerOutlet = NULL;
-	lsl::stream_outlet *pMarkerOutletIn = NULL;
-	lsl::stream_outlet *pMarkerOutletOut = NULL;
-	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-	int nEnabledChannelCountGUI = ampConfiguration.m_nEEGChannelCount +
-		ampConfiguration.m_nBipolarChannelCount +
-		ampConfiguration.m_nAuxChannelCount +
-		(ampConfiguration.m_bUseACC ? 3 : 0);
+	lsl::stream_outlet *pMarkerOutletSTE = NULL;
+	lsl::stream_outlet *pMarkerOutletSync = NULL;
+	SetPriorityClass(GetCurrentThread(), HIGH_PRIORITY_CLASS);
 
-	int nTriggerIdx = nEnabledChannelCountGUI;
+	int nChannelLabelCount = ampConfiguration.m_nEEGChannelCount +
+		ampConfiguration.m_nBipolarChannelCount +
+		ampConfiguration.m_nAuxChannelCount;
+		
+
+	int nTriggerIdx = nChannelLabelCount + (ampConfiguration.m_bUseACC ? 3 : 0);
 	int nSampleCounterIdx = nTriggerIdx + 3; // 2 (0 indexed) for the 2 triggers (i/o) and 2 for the CT_DIG channels which we ignore
-	int nExtraChannels = 0;
+	int nExtraChannels = (ampConfiguration.m_bUseACC ? 3 : 0);
 	if (ampConfiguration.m_bSampledMarkersEEG)
 	{
 		nExtraChannels++;
 		if (m_LiveAmp.hasSTE())
 		{
 			nExtraChannels++;
-			if (!ampConfiguration.m_bIsSTEInDefault)
+			if (ampConfiguration.m_bIsSTEInSync)
 				nExtraChannels++;
 		}
 	}
 	if (ampConfiguration.m_bUseSampleCounter)
 		nExtraChannels++;
 
-	int nTotalOutputChannelCount = nEnabledChannelCountGUI + nExtraChannels;
-	bool bUseSampleCounter = ampConfiguration.m_bUseSampleCounter;
-	int nExtraEEGMarkerChannelCnt = 0;
-	if (ampConfiguration.m_bSampledMarkersEEG)
-	{
-		nExtraEEGMarkerChannelCnt = 1;
-		if (m_LiveAmp.hasSTE())
-		{
-			nExtraEEGMarkerChannelCnt = 2;
-			if (!ui->rbDefault->isChecked())
-				nExtraEEGMarkerChannelCnt = 3;
-		}
-	}
-
+	int nTotalOutputChannelCount = nChannelLabelCount + nExtraChannels;
+	int nEEGAuxAndAccChannelCount = nChannelLabelCount + (ampConfiguration.m_bUseACC ? 3 : 0);
 	std::vector<float> pfSampleBuffer(nTotalOutputChannelCount);
 	std::vector<std::vector<float>> ppfLiveAmpBuffer(ampConfiguration.m_nChunkSize,std::vector<float>(m_LiveAmp.getEnabledChannelCnt()));
 	std::vector<std::vector<float>> ppfChunkBuffer(ampConfiguration.m_nChunkSize,std::vector<float>(nTotalOutputChannelCount));
-	std::vector<int16_t> pnUnsampledMarkerBuffer(ampConfiguration.m_nChunkSize);
-	std::vector<int16_t> pnUnsampledMarkerBufferIn(ampConfiguration.m_nChunkSize);
-	std::vector<int16_t> pnUnsampledMarkerBufferOut(ampConfiguration.m_nChunkSize);
 
 	float fMrkr;
 	float fPrevMarker=0.0;
@@ -587,7 +598,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 		lsl::stream_info dataInfo("LiveAmpSN-" + m_LiveAmp.getSerialNumber(),"EEG", nTotalOutputChannelCount, ampConfiguration.m_dSamplingRate, lsl::cf_float32,"LiveAmpSN-" + m_LiveAmp.getSerialNumber());
 		lsl::xml_element channels = dataInfo.desc().append_child("channels");
 
-		for (std::size_t k = 0; k < ampConfiguration.m_psChannelLabels.size(); k++) 
+		for (int k = 0; k < nChannelLabelCount; k++)
 		{
 			if (k < ampConfiguration.m_nEEGChannelCount)
 
@@ -604,24 +615,33 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 					.append_child_value("type", "bipolar")
 					.append_child_value("unit", "microvolts");
 			}
-			else if (k < ampConfiguration.m_nEEGChannelCount + ampConfiguration.m_nBipolarChannelCount + ampConfiguration.m_nAuxChannelCount)
+			else 
 			{
-
 				channels.append_child("channel")
 					.append_child_value("label", ampConfiguration.m_psChannelLabels[k].c_str())
 					.append_child_value("type", "AUX")
 					.append_child_value("unit", "microvolts");
 			}
-			else 
-			{
-				channels.append_child("channel")
-					.append_child_value("label", ampConfiguration.m_psChannelLabels[k].c_str())
-					.append_child_value("type", "ACC")
-					.append_child_value("unit", "milliGs");
-			}
 		}
-		
-		if (bUseSampleCounter)
+
+		if(ampConfiguration.m_bUseACC)
+			
+		{
+			channels.append_child("channel")
+				.append_child_value("label", "ACC_X")
+				.append_child_value("type", "ACC")
+				.append_child_value("unit", "milliGs");
+			channels.append_child("channel")
+				.append_child_value("label", "ACC_Y")
+				.append_child_value("type", "ACC")
+				.append_child_value("unit", "milliGs");
+			channels.append_child("channel")
+				.append_child_value("label", "ACC_Z")
+				.append_child_value("type", "ACC")
+				.append_child_value("unit", "milliGs");
+		}
+	
+		if (ampConfiguration.m_bUseSampleCounter)
 		{
 			channels.append_child("channel")
 				.append_child_value("label", "SampleCounter")
@@ -633,24 +653,24 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 		{
 			channels.append_child("channel")
 				.append_child_value("label", "DeviceTrigger")
-				.append_child_value("type", "DeviceTrigger")
-				.append_child_value("unit", "");
+				.append_child_value("type", "Trigger")
+				.append_child_value("unit", "integer");
 		}
 
 		// only create this channel if the STE is connected
 		if (ampConfiguration.m_bSampledMarkersEEG && m_LiveAmp.hasSTE()) {
 			channels.append_child("channel")
 				.append_child_value("label", "STETriggerIn")
-				.append_child_value("type", "STETriggerIn")
+				.append_child_value("type", "Trigger")
 				.append_child_value("unit", "integer");
 		}
 
 
-		if (ampConfiguration.m_bSampledMarkersEEG && m_LiveAmp.hasSTE() && !ampConfiguration.m_bIsSTEInDefault)
+		if (ampConfiguration.m_bSampledMarkersEEG && m_LiveAmp.hasSTE() && ampConfiguration.m_bIsSTEInSync)
 		{
 			channels.append_child("channel")
-				.append_child_value("label", "STETriggerOut")
-				.append_child_value("type", "STETriggerOut")
+				.append_child_value("label", "STESync")
+				.append_child_value("type", "SyncPulse")
 				.append_child_value("unit", "integer");
 		}
 
@@ -676,7 +696,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 			.append_child_value("Amplifier_LIB", ssLib.str())
 			.append_child_value("lsl_protocol", ssProt.str())
 			.append_child_value("liblsl", ssLSL.str())
-			.append_child_value("App", ssApp.str() + "_beta");
+			.append_child_value("App", ssApp.str());
 
 		// create marker streaminfo and outlet
 		if(ampConfiguration.m_bUnsampledMarkers) {
@@ -685,12 +705,12 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 
 			if (m_LiveAmp.hasSTE())
 			{
-				lsl::stream_info markerInfoIn("LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "-STETriggerIn", "Markers", 1, 0, lsl::cf_string, "LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "_STETriggerIn");
-				pMarkerOutletIn = new lsl::stream_outlet(markerInfoIn);
-				if (!ampConfiguration.m_bIsSTEInDefault)
+				lsl::stream_info markerInfoSTE("LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "-STETriggerIn", "Markers", 1, 0, lsl::cf_string, "LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "_STETriggerIn");
+				pMarkerOutletSTE = new lsl::stream_outlet(markerInfoSTE);
+				if (ampConfiguration.m_bIsSTEInSync)
 				{
-					lsl::stream_info markerInfoOut("LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "-STETriggerOut", "Markers", 1, 0, lsl::cf_string, "LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "_STETriggerOut");
-					pMarkerOutletOut = new lsl::stream_outlet(markerInfoOut);
+					lsl::stream_info markerInfoSync("LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "-STESync", "Markers", 1, 0, lsl::cf_string, "LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "_STESync");
+					pMarkerOutletSync = new lsl::stream_outlet(markerInfoSync);
 				}
 			}
 		}	
@@ -701,6 +721,8 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 		ppfChunkBuffer.clear();
 		int64_t nSamplesRead;
 		int nSampleCount;
+
+
 
 		while (!m_bStop) {
 			nSamplesRead = m_LiveAmp.pullAmpData(pBuffer, nBufferSize);
@@ -722,7 +744,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 				for (i=0;i<nSampleCount;i++) {
 					pfSampleBuffer.clear();
 
-					for (k=0; k<nEnabledChannelCountGUI; k++)	
+					for (k=0; k<nEEGAuxAndAccChannelCount; k++)	
 						pfSampleBuffer.push_back(ppfLiveAmpBuffer[i][k]); 
 					if (ampConfiguration.m_bUseSampleCounter)
 						pfSampleBuffer.push_back(ppfLiveAmpBuffer[i][nSampleCounterIdx]);
@@ -745,7 +767,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 							pfSampleBuffer.push_back(fMrkrIn);
 
 						//if (!ui->rbDefault->isChecked())
-						if (!ampConfiguration.m_bIsSTEInDefault)
+						if (ampConfiguration.m_bIsSTEInSync)
 						{
 							float fMrkrTmpOut = (float)(((int)ppfLiveAmpBuffer[i][nTriggerIdx + 1] >> 8));
 							fMrkrOut = (fMrkrTmpOut == fPrevMarkerOut ? -1.0 : fMrkrTmpOut);
@@ -779,16 +801,16 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 							if (fUMrkrIn != fPrevUMarkerIn) 
 							{
 								std::string sMrkrIn = std::to_string((int)fUMrkrIn);
-								pMarkerOutletIn->push_sample(&sMrkrIn, dNow + (double)(s + 1 - nSampleCount) / ampConfiguration.m_dSamplingRate);
+								pMarkerOutletSTE->push_sample(&sMrkrIn, dNow + (double)(s + 1 - nSampleCount) / ampConfiguration.m_dSamplingRate);
 							}
 							fPrevUMarkerIn = fUMrkrIn;
-							if (ampConfiguration.m_bIsSTEInDefault)
+							if (ampConfiguration.m_bIsSTEInSync)
 							{
 								fUMrkrOut = (float)(((int)ppfLiveAmpBuffer[s][nTriggerIdx + 1] >> 8));
 								if (fUMrkrOut != fPrevUMarkerOut) 
 								{
 									std::string sMrkrOut = std::to_string((int)fUMrkrOut);
-									pMarkerOutletOut->push_sample(&sMrkrOut, dNow + (double)(s + 1 - nSampleCount) / ampConfiguration.m_dSamplingRate);
+									pMarkerOutletSync->push_sample(&sMrkrOut, dNow + (double)(s + 1 - nSampleCount) / ampConfiguration.m_dSamplingRate);
 								}
 								fPrevUMarkerOut = fUMrkrOut;
 							}
@@ -802,6 +824,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 
 	catch (std::exception & e)
 	{
+		//emit RethrowListenerException(e);
 		throw std::runtime_error((std::string("Acquisition loop failure: ") += e.what()).c_str());
 	}
 
@@ -814,9 +837,9 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 		delete(pMarkerOutlet);
 		if (m_LiveAmp.hasSTE())
 		{
-			delete(pMarkerOutletIn);
-			if (!ui->rbDefault->isChecked())
-				delete(pMarkerOutletOut);
+			delete(pMarkerOutletSTE);
+			if (ampConfiguration.m_bIsSTEInSync)
+				delete(pMarkerOutletSync);
 		}
 
 	}
@@ -837,4 +860,327 @@ MainWindow::~MainWindow() {
 
 	delete ui;
 }
+
+//void ListenThread::StopLoop()
+//{
+//	m_bStop = true;
+//}
+//
+//void ListenThread::Loop()
+//{
+//
+//	lsl::stream_outlet* pMarkerOutlet = NULL;
+//	lsl::stream_outlet* pMarkerOutletSTE = NULL;
+//	lsl::stream_outlet* pMarkerOutletSync = NULL;
+//	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+//
+//	int nChannelLabelCount = m_AmpConfiguration.m_nEEGChannelCount +
+//		m_AmpConfiguration.m_nBipolarChannelCount +
+//		m_AmpConfiguration.m_nAuxChannelCount;
+//
+//
+//	int nTriggerIdx = nChannelLabelCount + (m_AmpConfiguration.m_bUseACC ? 3 : 0);
+//	int nSampleCounterIdx = nTriggerIdx + 3; // 2 (0 indexed) for the 2 triggers (i/o) and 2 for the CT_DIG channels which we ignore
+//	int nExtraChannels = (m_AmpConfiguration.m_bUseACC ? 3 : 0);
+//	if (m_AmpConfiguration.m_bSampledMarkersEEG)
+//	{
+//		nExtraChannels++;
+//		if (m_LiveAmp.hasSTE())
+//		{
+//			nExtraChannels++;
+//			if (m_AmpConfiguration.m_bIsSTEInSync)
+//				nExtraChannels++;
+//		}
+//	}
+//	if (m_AmpConfiguration.m_bUseSampleCounter)
+//		nExtraChannels++;
+//
+//	int nTotalOutputChannelCount = nChannelLabelCount + nExtraChannels;
+//	int nEEGAuxAndAccChannelCount = nChannelLabelCount + (m_AmpConfiguration.m_bUseACC ? 3 : 0);
+//	std::vector<float> pfSampleBuffer(nTotalOutputChannelCount);
+//	std::vector<std::vector<float>> ppfLiveAmpBuffer(m_AmpConfiguration.m_nChunkSize, std::vector<float>(m_LiveAmp.getEnabledChannelCnt()));
+//	std::vector<std::vector<float>> ppfChunkBuffer(m_AmpConfiguration.m_nChunkSize, std::vector<float>(nTotalOutputChannelCount));
+//
+//	float fMrkr;
+//	float fPrevMarker = 0.0;
+//	float fMrkrIn;
+//	float fPrevMarkerIn = 0.0;
+//	float fMrkrOut;
+//	float fPrevMarkerOut = 0.0;
+//	float fUMrkr;
+//	float fPrevUMarker = 0.0;
+//	float fUMrkrIn;
+//	float fPrevUMarkerIn = 0.0;
+//	float fUMrkrOut;
+//	float fPrevUMarkerOut = 0.0;
+//
+//	BYTE* pBuffer = NULL;
+//
+//	try
+//	{
+//		m_LiveAmp.startAcquisition();
+//		std::vector<int>pnTriggerIndeces = m_LiveAmp.getTrigIndices();
+//		// testing exception handling: this should cause an exception to be thrown
+//		//lsl::stream_info dataInfo("LiveAmpSN-" + m_LiveAmp.getSerialNumber(), "EEG", 500, m_AmpConfiguration.m_dSamplingRate, lsl::cf_float32, "LiveAmpSN-" + m_LiveAmp.getSerialNumber());
+//		lsl::stream_info dataInfo("LiveAmpSN-" + m_LiveAmp.getSerialNumber(),"EEG", nTotalOutputChannelCount, m_AmpConfiguration.m_dSamplingRate, lsl::cf_float32,"LiveAmpSN-" + m_LiveAmp.getSerialNumber());
+//		lsl::xml_element channels = dataInfo.desc().append_child("channels");
+//
+//		for (int k = 0; k < nChannelLabelCount; k++)
+//		{
+//			if (k < m_AmpConfiguration.m_nEEGChannelCount)
+//
+//			{
+//				channels.append_child("channel")
+//					.append_child_value("label", m_AmpConfiguration.m_psChannelLabels[k].c_str())
+//					.append_child_value("type", "EEG")
+//					.append_child_value("unit", "microvolts");
+//			}
+//			else if (k < m_AmpConfiguration.m_nEEGChannelCount + m_AmpConfiguration.m_nBipolarChannelCount)
+//			{
+//				channels.append_child("channel")
+//					.append_child_value("label", m_AmpConfiguration.m_psChannelLabels[k].c_str())
+//					.append_child_value("type", "bipolar")
+//					.append_child_value("unit", "microvolts");
+//			}
+//			else
+//			{
+//				channels.append_child("channel")
+//					.append_child_value("label", m_AmpConfiguration.m_psChannelLabels[k].c_str())
+//					.append_child_value("type", "AUX")
+//					.append_child_value("unit", "microvolts");
+//			}
+//		}
+//
+//		if (m_AmpConfiguration.m_bUseACC)
+//
+//		{
+//			channels.append_child("channel")
+//				.append_child_value("label", "ACC_X")
+//				.append_child_value("type", "ACC")
+//				.append_child_value("unit", "milliGs");
+//			channels.append_child("channel")
+//				.append_child_value("label", "ACC_Y")
+//				.append_child_value("type", "ACC")
+//				.append_child_value("unit", "milliGs");
+//			channels.append_child("channel")
+//				.append_child_value("label", "ACC_Z")
+//				.append_child_value("type", "ACC")
+//				.append_child_value("unit", "milliGs");
+//		}
+//
+//		if (m_AmpConfiguration.m_bUseSampleCounter)
+//		{
+//			channels.append_child("channel")
+//				.append_child_value("label", "SampleCounter")
+//				.append_child_value("type", "SampleCounter")
+//				.append_child_value("unit", "");
+//		}
+//
+//		if (m_AmpConfiguration.m_bSampledMarkersEEG)
+//		{
+//			channels.append_child("channel")
+//				.append_child_value("label", "DeviceTrigger")
+//				.append_child_value("type", "Trigger")
+//				.append_child_value("unit", "integer");
+//		}
+//
+//		// only create this channel if the STE is connected
+//		if (m_AmpConfiguration.m_bSampledMarkersEEG && m_LiveAmp.hasSTE()) {
+//			channels.append_child("channel")
+//				.append_child_value("label", "STETriggerIn")
+//				.append_child_value("type", "Trigger")
+//				.append_child_value("unit", "integer");
+//		}
+//
+//
+//		if (m_AmpConfiguration.m_bSampledMarkersEEG && m_LiveAmp.hasSTE() && m_AmpConfiguration.m_bIsSTEInSync)
+//		{
+//			channels.append_child("channel")
+//				.append_child_value("label", "STESync")
+//				.append_child_value("type", "SyncPulse")
+//				.append_child_value("unit", "integer");
+//		}
+//
+//		dataInfo.desc().append_child("acquisition")
+//			.append_child_value("manufacturer", "Brain Products");
+//
+//		t_VersionNumber libVersion;
+//		GetLibraryVersion(&libVersion);
+//		int32_t lslProtocolVersion = lsl::protocol_version();
+//		int32_t lslLibVersion = lsl::library_version();
+//		std::stringstream ssLib;
+//		ssLib << LIBVERSIONSTREAM(libVersion);
+//		std::stringstream ssProt;
+//		ssProt << LSLVERSIONSTREAM(lslProtocolVersion);
+//		std::stringstream ssLSL;
+//		ssLSL << LSLVERSIONSTREAM(lslLibVersion);
+//		std::stringstream ssApp;
+//		ssApp << APPVERSIONSTREAM(m_AppVersion);
+//		// make a data outlet
+//		lsl::stream_outlet dataOutlet(dataInfo);
+//
+//		dataInfo.desc().append_child("versions")
+//			.append_child_value("Amplifier_LIB", ssLib.str())
+//			.append_child_value("lsl_protocol", ssProt.str())
+//			.append_child_value("liblsl", ssLSL.str())
+//			.append_child_value("App", ssApp.str() + "_beta");
+//
+//		// create marker streaminfo and outlet
+//		if (m_AmpConfiguration.m_bUnsampledMarkers) {
+//			lsl::stream_info markerInfo("LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "-DeviceTrigger", "Markers", 1, 0, lsl::cf_string, "LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "_DeviceTrigger");
+//			pMarkerOutlet = new lsl::stream_outlet(markerInfo);
+//
+//			if (m_LiveAmp.hasSTE())
+//			{
+//				lsl::stream_info markerInfoSTE("LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "-STETriggerIn", "Markers", 1, 0, lsl::cf_string, "LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "_STETriggerIn");
+//				pMarkerOutletSTE = new lsl::stream_outlet(markerInfoSTE);
+//				if (m_AmpConfiguration.m_bIsSTEInSync)
+//				{
+//					lsl::stream_info markerInfoSync("LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "-STESync", "Markers", 1, 0, lsl::cf_string, "LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "_STESync");
+//					pMarkerOutletSync = new lsl::stream_outlet(markerInfoSync);
+//				}
+//			}
+//		}
+//
+//		int nLastMrk = 0;
+//		int32_t nBufferSize = (m_AmpConfiguration.m_nChunkSize) * m_LiveAmp.getSampleSize();
+//		pBuffer = new BYTE[nBufferSize];
+//		ppfChunkBuffer.clear();
+//		int64_t nSamplesRead;
+//		int nSampleCount;
+//
+//
+//
+//		while (!m_bStop) {
+//			nSamplesRead = m_LiveAmp.pullAmpData(pBuffer, nBufferSize);
+//			if (nSamplesRead <= 0) {
+//				// CPU saver, this is ok even at higher sampling rates
+//				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+//				continue;
+//			}
+//
+//			m_LiveAmp.pushAmpData(pBuffer, nBufferSize, nSamplesRead, ppfLiveAmpBuffer);
+//			double dNow = lsl::local_clock();
+//			nSampleCount = (int)ppfLiveAmpBuffer.size();
+//
+//			if (nSampleCount >= m_AmpConfiguration.m_nChunkSize) {
+//
+//				int k;
+//				int i;
+//
+//				for (i = 0; i < nSampleCount; i++) {
+//					pfSampleBuffer.clear();
+//
+//					for (k = 0; k < nEEGAuxAndAccChannelCount; k++)
+//						pfSampleBuffer.push_back(ppfLiveAmpBuffer[i][k]);
+//					if (m_AmpConfiguration.m_bUseSampleCounter)
+//						pfSampleBuffer.push_back(ppfLiveAmpBuffer[i][nSampleCounterIdx]);
+//					// if the trigger is a new value, record it, else it is 0.0
+//					// totalChannelCount is always equivalent to the last channel in the liveamp_buffer
+//					// which corresponds to the output trigger, the one before it is the input trigger
+//					float fMrkrTmp = (float)(1 - ((int)ppfLiveAmpBuffer[i][nTriggerIdx] % 2)); // only 1 bit
+//					fMrkr = (fMrkrTmp == fPrevMarker ? -1.0 : (float)((int)ppfLiveAmpBuffer[i][nTriggerIdx] % 2));
+//					fPrevMarker = fMrkrTmp;
+//					if (m_AmpConfiguration.m_bSampledMarkersEEG)
+//						pfSampleBuffer.push_back(fMrkr);
+//
+//					if (m_LiveAmp.hasSTE() && m_AmpConfiguration.m_bSampledMarkersEEG)
+//					{
+//						float fMrkrTmpIn = (float)(((int)ppfLiveAmpBuffer[i][nTriggerIdx] >> 8));
+//						fMrkrIn = (fMrkrTmpIn == fPrevMarkerIn ? -1.0 : fMrkrTmpIn);
+//						fPrevMarkerIn = fMrkrTmpIn;
+//
+//						if (m_AmpConfiguration.m_bSampledMarkersEEG)
+//							pfSampleBuffer.push_back(fMrkrIn);
+//
+//						//if (!ui->rbDefault->isChecked())
+//						if (m_AmpConfiguration.m_bIsSTEInSync)
+//						{
+//							float fMrkrTmpOut = (float)(((int)ppfLiveAmpBuffer[i][nTriggerIdx + 1] >> 8));
+//							fMrkrOut = (fMrkrTmpOut == fPrevMarkerOut ? -1.0 : fMrkrTmpOut);
+//							fPrevMarkerOut = fMrkrTmpOut;
+//
+//							if (m_AmpConfiguration.m_bSampledMarkersEEG)
+//								pfSampleBuffer.push_back(fMrkrOut);
+//						}
+//					}
+//					ppfChunkBuffer.push_back(pfSampleBuffer);
+//				}
+//				dataOutlet.push_chunk(ppfChunkBuffer, dNow);
+//				ppfChunkBuffer.clear();
+//
+//				if (m_AmpConfiguration.m_bUnsampledMarkers)
+//				{
+//					for (int s = 0; s < nSampleCount; s++)
+//					{
+//						// shift left to 0 out the top 8 bits, then shift right to return and keep the lower 8
+//						// subtract from 1 because the bit order goes from right to left
+//						fUMrkr = (float)(1 - (int)ppfLiveAmpBuffer[s][nTriggerIdx] % 2);
+//						if (fUMrkr != fPrevUMarker)
+//						{
+//							std::string sMrkr = std::to_string((int)fUMrkr);
+//							pMarkerOutlet->push_sample(&sMrkr, dNow + (double)(s + 1 - nSampleCount) / m_AmpConfiguration.m_dSamplingRate);
+//						}
+//						fPrevUMarker = fUMrkr;
+//						if (m_LiveAmp.hasSTE())
+//						{
+//							fUMrkrIn = (float)(((int)ppfLiveAmpBuffer[s][nTriggerIdx] >> 8));
+//							if (fUMrkrIn != fPrevUMarkerIn)
+//							{
+//								std::string sMrkrIn = std::to_string((int)fUMrkrIn);
+//								pMarkerOutletSTE->push_sample(&sMrkrIn, dNow + (double)(s + 1 - nSampleCount) / m_AmpConfiguration.m_dSamplingRate);
+//							}
+//							fPrevUMarkerIn = fUMrkrIn;
+//							if (m_AmpConfiguration.m_bIsSTEInSync)
+//							{
+//								fUMrkrOut = (float)(((int)ppfLiveAmpBuffer[s][nTriggerIdx + 1] >> 8));
+//								if (fUMrkrOut != fPrevUMarkerOut)
+//								{
+//									std::string sMrkrOut = std::to_string((int)fUMrkrOut);
+//									pMarkerOutletSync->push_sample(&sMrkrOut, dNow + (double)(s + 1 - nSampleCount) / m_AmpConfiguration.m_dSamplingRate);
+//								}
+//								fPrevUMarkerOut = fUMrkrOut;
+//							}
+//						}
+//					}
+//				}
+//				ppfLiveAmpBuffer.clear();
+//			}
+//		}
+//		int foo = 1;
+//	}
+//
+//	catch (std::exception & e)
+//	{
+//		emit RethrowListenerException(e);
+//		//throw std::runtime_error((std::string("Acquisition loop failure: ") += e.what()).c_str());
+//	}
+//
+//	if (pBuffer != NULL)
+//		delete[] pBuffer;
+//	pBuffer = NULL;
+//	// cleanup (if necessary)
+//	if (m_AmpConfiguration.m_bUnsampledMarkers)
+//	{
+//		delete(pMarkerOutlet);
+//		if (m_LiveAmp.hasSTE())
+//		{
+//			delete(pMarkerOutletSTE);
+//			if (m_AmpConfiguration.m_bIsSTEInSync)
+//				delete(pMarkerOutletSync);
+//		}
+//
+//	}
+//	try
+//	{
+//		m_LiveAmp.stopAcquisition();
+//		m_LiveAmp.close();
+//	}
+//	catch (std::exception & e)
+//	{
+//		throw std::runtime_error((std::string("Error disconnecting from LiveAmp: ") += e.what()).c_str());
+//	}
+//}
+
+
 
