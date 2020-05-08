@@ -1,0 +1,14 @@
+LiveAmp LSL Connector v1.19.2
+-BUGFIX: channel label typing bug
+-BUGFIX: aux channel update bug
+
+LiveAmp LSL Connector v1.19.1
+-attempted to use subclassed QThread to throw exceptions from acquisition loop via signals---didn't work
+-BUGFIX: pulsewidth and pin on STE Sync settings correctly assigned (thanks to Norbert Hauser)
+
+LiveAmp LSL Connector v1.19.0
+-Renamed marker outlets
+-moved to INI config file format 
+-removed ACC channels from channel label dialog
+-only STE sync mode has its own marker channel (mirror mode is hardware config only)
+-disable all gui widgets on link

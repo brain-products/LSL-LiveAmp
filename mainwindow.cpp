@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent, const char* config_file): QMainWindow(pa
 	
 	m_AppVersion.Major = 1;
 	m_AppVersion.Minor = 19;
-	m_AppVersion.Bugfix = 1;
+	m_AppVersion.Bugfix = 2;
 
 	m_bOverrideAutoUpdate = false;
 	ui->setupUi(this);
@@ -49,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent, const char* config_file): QMainWindow(pa
 	QObject::connect(ui->eegChannelCount, SIGNAL(valueChanged(int)),this, SLOT(UpdateChannelLabelsWithEeg(int)));
 	QObject::connect(ui->bipolarChannelCount, SIGNAL(valueChanged(int)),this, SLOT(UpdateChannelLabelsWithBipolar(int)));
 	QObject::connect(ui->deviceCb,SIGNAL(currentIndexChanged(int)),this,SLOT(ChooseDevice(int)));
+	//QObject::connect(ui->auxChannelCount, SIGNAL(valueChanged()), this, SLOT(UpdateChannelLabelsAux()));
 	QObject::connect(ui->auxChannelCount, SIGNAL(valueChanged(int)), this, SLOT(UpdateChannelLabelsAux(int)));
 	QObject::connect(ui->useACC, SIGNAL(clicked(bool)), this, SLOT(UpdateChannelLabelsAcc(bool)));
 	QObject::connect(ui->sampleCounter, SIGNAL(clicked(bool)), this, SLOT(UpdateChannelLabelsSampleCounter(bool)));
@@ -62,7 +63,7 @@ void MainWindow::UpdateChannelCounters(int n)
 
 	ui->eegChannelCount->setMaximum(n);
 	ui->eegChannelCount->setValue(n-ui->bipolarChannelCount->value());
-	UpdateChannelLabelsWithBipolar(ui->bipolarChannelCount->value());
+	UpdateChannelLabelsWithBipolar(n);
 
 }
 
@@ -97,7 +98,13 @@ void MainWindow::UpdateChannelLabels(void)
 	//str = ui->channelLabels->toPlainText().toStdString();
 	//boost::split(psEEGChannelLabels, str, boost::is_any_of("\n"));
 	int nVal = ui->eegChannelCount->value();
-
+	for (auto it = psEEGChannelLabels.begin(); it != psEEGChannelLabels.end();)
+	{
+		if ((*(it)).find("AUX") != std::string::npos)
+			it = psEEGChannelLabels.erase(it);
+		else
+			++it;
+	}
 	while (int i = psEEGChannelLabels.size() > nVal)
 		psEEGChannelLabels.pop_back();
 	if(psEEGChannelLabels.size()>0)
@@ -137,13 +144,15 @@ void MainWindow::UpdateChannelLabels(void)
 	//}
 }
 
-void MainWindow::UpdateChannelLabelsWithEeg(int n){
+void MainWindow::UpdateChannelLabelsWithEeg(int n)
+{
 	
 	if (m_bOverrideAutoUpdate)return;
 	UpdateChannelLabels();
 }
 
-void MainWindow::UpdateChannelLabelsWithBipolar(int n){
+void MainWindow::UpdateChannelLabelsWithBipolar(int n)
+{
 	
 	if(!ui->overwriteChannelLabels->isChecked())return;
 	UpdateChannelLabels();
@@ -178,8 +187,9 @@ void MainWindow::VersionsDialog()
 	QMessageBox::information(this, "Versions", ss.str().c_str(), QMessageBox::Ok);
 }
 
-void MainWindow::UpdateChannelLabelsAux(int n) 
+void MainWindow::UpdateChannelLabelsAux(int) 
 {
+	//if (!ui->overwriteChannelLabels->isChecked())return;
 	UpdateChannelLabels();
 }
 

@@ -127,6 +127,9 @@ PO10 </string>
            <property name="toolTip">
             <string>This must match the number of entries in the channel list</string>
            </property>
+           <property name="keyboardTracking">
+            <bool>false</bool>
+           </property>
            <property name="minimum">
             <number>0</number>
            </property>
@@ -201,6 +204,9 @@ PO10 </string>
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;In LiveAmp 32, if any bipolar channels are enabled, the maximum number of EEG channels drops to 24. In LiveAmp 16 or 8, you are limited to 16 or 8 channels total and a maximum of 8 bipolar channels.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
+           <property name="keyboardTracking">
+            <bool>false</bool>
+           </property>
            <property name="maximum">
             <number>8</number>
            </property>
@@ -242,6 +248,9 @@ PO10 </string>
          </item>
          <item row="5" column="1">
           <widget class="QSpinBox" name="auxChannelCount">
+           <property name="keyboardTracking">
+            <bool>false</bool>
+           </property>
            <property name="maximum">
             <number>8</number>
            </property>
