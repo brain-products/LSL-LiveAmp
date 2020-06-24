@@ -23,13 +23,13 @@ Make sure that you have correctly installed the drivers for your amplifier, and 
 
 ### Device Number
 
-If you know the serial number of the amplifier you want to connect with, you may enter it manually in the 'Device Number' field. Otherwise, you can scan for amplifiers using the 'Scan' button at the bottom of the GUI. After scanning, the'Available Devices' combo-box will be populated with all available devices. The 'Device Number' field wil
+If you know the serial number of the amplifier you want to connect with, you may enter it manually in the 'Device Number' field. Otherwise, you can scan for amplifiers using the 'Scan' button at the bottom of the GUI. After scanning, the'Available Devices' combo box will be populated with all available devices. The 'Device Number' field will automatically be filled with the number of the first device found. Whichever device is referred to here will be the device that is connected with at the 'Link' action. 
 
-l automatically be filled with the number of the first device found. Whichever device is referred to here will be the device that is connected with at the 'Link' action. It is highly recommended, when connecting with more than one device, to turn one device at a time and connect before attempting to connect with another device. The 'Scan' action will not find any device that is alread connected by the 'Link' action.
+It is highly recommended, when connecting with more than one device, to turn one device at a time and connect before attempting to connect with another device. The 'Scan' action will not find any device that is alread connected by the 'Link' action.
 
 ### EEG/Bipolar/Aux Channles
 
-You can adjust the number of EEG, Bipolar, and AUX channels that the device enables during link. Note that if the 'Overwrite on Channel Change' box is checked, changing these values will change the labels in the Channel Labels text box on the left side of the GUI. See the section on Channel Labels below for more information.
+You can adjust the number of EEG, Bipolar, and AUX channels that the device enables during Link action. Note that if the 'Overwrite on Channel Change' box is checked, changing these values will change the labels in the Channel Labels text box on the left side of the GUI. See the section on Channel Labels below for more information.
 
 ### Enable ACC sensors
 
@@ -71,7 +71,9 @@ In 'Default' mode, nothing comes out of the STE box's output port and there is n
 
 ## Link
 
-The Link button will attempt to connect to the device specified in the 'Device Number' field.
+The Link button will attempt to connect to the device specified in the 'Device Number' field. This may take a few moments due to Bluetooth handshaking. When complete, the button text will change to 'Unlink' and all other GUI widgets will be disabled. An error message will pop up if no devices are available.
+
+When the Connector is linked to the LiveAmp, LSL streams will be created according to the settings set in the GUI. Please note that settings can be saved in a configuration file (see below).
 
 ## Scan For Devices
 
@@ -91,6 +93,8 @@ The latest version of the LiveAmp Connector uses [INI](https://en.wikipedia.org/
 
 `[channels]`
 `labels=Fp1, Fp2, F7, F3, Fz, F4, F8, FC5, FC1, FC2, FC6, T7, C3, Cz, C4, T8, TP9, CP5, CP1, CP2, CP6, TP10, P7, P3, Pz, P4, P8, PO9, O1, Oz, O2, PO10`
+
+The LSL channel meta-data corresponds to the conventions of the XDF file format. These are described [here](https://github.com/sccn/xdf/wiki/EEG-Meta-Data).
 
 ## Loading channel label files
 
