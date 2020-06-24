@@ -35,7 +35,7 @@ You can adjust the number of EEG, Bipolar, and AUX channels that the device enab
 
 Check this box if you wish to include the LiveAmp accelorometer data in your data stream.
 
-### Sample Ounter in EEG
+### Sample Counter in EEG
 
 When this box is checked, the last channel in the device stream will be a number that increases by 1 at every sample (and periodically wraps around).
 
@@ -53,11 +53,11 @@ These check boxes determine the way that LSL handles device triggers. Please see
 
 ### Unsampled String Markers
 
-If 'Unsampled String Markers' is checked, the app will create a Marker stream on 'Link' that will forward the triggers received at the 1-bit trigger input on the amplifier. This stream will have the name of 'LiveAmpSN-xxxxxx-xxx-DeviceTrigger'. 
+If 'Unsampled String Markers' is checked, the app will create a Marker stream on 'Link' that will forward the triggers received at the 1-bit trigger input on the amplifier. This stream will have the name of 'LiveAmpSN-xxxxxx-xxxx-DeviceTrigger'. 
 
-If the STE box is connected, there will be two Marker streams created. One for the 1-bit amplifier trigger and one for the STE box trigger input. The STE Marker stream will have the name 'LiveAmpSN-xxxxxx-xxx-STETriggerIn'.
+If the STE box is connected, there will be two Marker streams created. One for the 1-bit amplifier trigger and one for the STE box trigger input. The STE Marker stream will have the name 'LiveAmpSN-xxxxxx-xxxx-STETriggerIn'.
 
-If the STE box is connected and the STE Out Mode is set to 'Sync' there will be a third Marker outlet that corresponds to the hardware triggers sent from the trigger out of the STE box. The name of this Marker stream will be 'LiveAmpSN-xxxxxx-xxx-STESync'. Note that this is not recommended for 'Unsampled String Markers' as it creates an unordinate number of string markers (one per sample) which is not the intended use of LSL Marker outlets.
+If the STE box is connected and the STE Out Mode is set to 'Sync' there will be a third Marker outlet that corresponds to the hardware triggers sent from the trigger out of the STE box. The name of this Marker stream will be 'LiveAmpSN-xxxxxx-xxx-STESync'. Note that this is not recommended for 'Unsampled String Markers' as it creates a large number of string markers (one per sample) which is not the intended use of LSL Marker outlets.
 
 ### EEG Channel
 
