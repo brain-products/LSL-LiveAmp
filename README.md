@@ -51,17 +51,19 @@ The LiveAmp device has 3 available sampling rates: 250, 500, and 1000Hz. Note th
 
 These check boxes determine the way that LSL handles device triggers. Please see the file [explanation_of_trigger_marker_types.pdf]( https://github.com/brain-products/LSL-LiveAmp/blob/master/explanation_of_trigger_marker_types.pdf) for more details.
 
+Note that it is possible to enable neither, one of, or both trigger output styles simultaneously. They are not mutually exclusive.
+
 ### Unsampled String Markers
 
-If 'Unsampled String Markers' is checked, the app will create a Marker stream on 'Link' that will forward the triggers received at the 1-bit trigger input on the amplifier. This stream will have the name of 'LiveAmpSN-xxxxxx-xxxx-DeviceTrigger'. 
+If 'Unsampled String Markers' is checked, the app will create a Marker stream on 'Link' that will forward the triggers received at the 1-bit trigger input on the hardware device. This stream will have the name of 'LiveAmpSN-xxxxxx-xxxx-DeviceTrigger' and its sampling rate is 0, i.e. it is a Marker stream 
 
 If the STE box is connected, there will be two Marker streams created. One for the 1-bit amplifier trigger and one for the STE box trigger input. The STE Marker stream will have the name 'LiveAmpSN-xxxxxx-xxxx-STETriggerIn'.
 
-If the STE box is connected and the STE Out Mode is set to 'Sync' there will be a third Marker outlet that corresponds to the hardware triggers sent from the trigger out of the STE box. The name of this Marker stream will be 'LiveAmpSN-xxxxxx-xxx-STESync'. Note that this is not recommended for 'Unsampled String Markers' as it creates a large number of string markers (one per sample) which is not the intended use of LSL Marker outlets.
+If the STE box is connected and the STE Out Mode is set to 'Sync' there will be a third Marker outlet that corresponds to the hardware triggers sent from the trigger out of the STE box. The name of this Marker stream will be 'LiveAmpSN-xxxxxx-xxxx-STESync'. Note that this is not recommended for 'Unsampled String Markers' as it creates a large number of string markers (one per sample) which is not the intended use of LSL Marker outlets.
 
 ### EEG Channel
 
-If this box is checked, extra channels will be added to the EEG/Bipolar/AUX/ACC stream corresponding to the requested trigger outputs. Rather than unsampled markers, these channels will output -1 if no trigger is available, else the value corresponding to the triggers in; and, in the case of the STE box in 'Sync' mode, the sync stream presented at the DSub output of the STE box.
+If this box is checked, extra channels will be added to the EEG/Bipolar/AUX/ACC stream corresponding to the requested trigger outputs. Rather than unsampled markers, these channels will output -1 if no trigger is available, else the value corresponding to the triggers in; and, in the case of the STE box in 'Sync' mode, the sync stream presented at the DSub output of the STE box. 
 
 ## STE Out Mode
 
@@ -71,15 +73,15 @@ In 'Default' mode, nothing comes out of the STE box's output port and there is n
 
 ## Link
 
-The Link button will attempt to connect to the device specified in the 'Device Number' field. This may take a few moments due to Bluetooth handshaking. When complete, the button text will change to 'Unlink' and all other GUI widgets will be disabled. An error message will pop up if no devices are available.
+When pressed, the Link button will attempt to connect to the device specified in the 'Device Number' field. This may take a few moments due to Bluetooth handshaking. When complete, the button text will change to 'Unlink' and all other GUI widgets will be disabled. An error message will pop up if no devices are available.
 
-When the Connector is linked to the LiveAmp, LSL streams will be created according to the settings set in the GUI. Please note that settings can be saved in a configuration file (see below).
+When the Connector is linked to the LiveAmp, LSL streams will be created according to the settings set in the GUI. Please note that settings can be saved in a configuration file (see below) for ease of repetition.
 
 ## Scan For Devices
 
-When 'Scan' is pressed, this button will search for available LiveAmps. When 1 or more LiveAmps is found, the Serial Numbers of these devices will populate the 'Available Devices' combo box. The first device found will automatically be placed in the 'Device Number' field. When devices are available in the 'Available Devices' box, the user may choose from the available devices directly. The chosen device will be forwarded to the 'Device Number' field. If the selected device is unavailable at 'Link', the app will notify the user with an error message.
+When 'Scan' is pressed, the app will search for available LiveAmps. When 1 or more LiveAmps is found, the Serial Numbers of these devices will populate the 'Available Devices' combo box. The first device found will automatically be placed in the 'Device Number' field. When devices are available in the 'Available Devices' box, the user may choose from the available devices in the combo box by interacting with the combo box itself. The chosen device will be forwarded to the 'Device Number' field. If the selected device is unavailable at 'Link', the app will notify the user with an error message. The enumerated devices will also report the type of LiveAmp found (8, 16, 32, or 64 channel).
 
-The LiveAmp device has a simulator mode which can be activated with the 'Use Simulator' checkbox.
+The LiveAmp device has a simulator mode which can be activated with the 'Use Simulator' checkbox. This will create 
 
 ## Configuration file
 
