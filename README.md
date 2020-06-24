@@ -16,7 +16,7 @@ You can also find a useful (free) LSL viewer on the Brian Products website: [Bra
 
 Make sure that you have correctly installed the drivers for your amplifier, and that the amplifier dongle (or dongles in the case of a 64 channel system) is plugged in. Alternatively, with a <=32 channel device, you may be able to connect to a LiveAmp via your PC's built in bluetooth device---which must be enabled.  Make sure that the device is turned on, and that batteries are charged. It is always good to read the manual before operation.
 
-  * Start the BrainAmpSeries app. You should see a window like the following.
+  * Start the LiveAmp Connector app. You should see a window like the following.
 > ![liveamp.png](liveamp.png)
 
 ## Device Settings
@@ -71,11 +71,11 @@ This settings group controls the setup of the STE box's trigger outputs and how 
 
 In 'Default' mode, nothing comes out of the STE box's output port and there is no corresponding LSL stream. In 'Mirror' mode, whatever is at the STE trigger input will be forwarded (in hardware) to the STE box's trigger output port. Since one has the option of recording triggers into the STE box, there is no reason to create an LSL Marker stream or extra EEG channel corresponding to these trigger events. In 'Sync' mode, a TTL pulse goes out of pin 1 of the STE box's output port. The sync frequency is adjustable and a corresponding LSL Marker stream and/or extra EEG channel will be created depending on the chosen 'LSL Trigger Output Style' settings.
 
-## Link
+ ## Link
 
-When pressed, the Link button will attempt to connect to the device specified in the 'Device Number' field. This may take a few moments due to Bluetooth handshaking. When complete, the button text will change to 'Unlink' and all other GUI widgets will be disabled. An error message will pop up if no devices are available.
+ When pressed, the Link button will attempt to connect to the device specified in the 'Device Number' field. This may take a few moments due to Bluetooth handshaking. When complete, the button text will change to 'Unlink' and all other GUI widgets will be disabled. An error message will pop up if no devices are available.
 
-When the Connector is linked to the LiveAmp, LSL streams will be created according to the settings set in the GUI. Please note that settings can be saved in a configuration file (see below) for ease of repetition.
+ When the Connector is linked to the LiveAmp, LSL streams will be created according to the settings set in the GUI. Please note that settings can be saved in a configuration file (see below) for ease of repetition.
 
 ## Scan For Devices
 
