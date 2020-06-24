@@ -14,7 +14,7 @@ You can also find a useful (free) LSL viewer on the Brian Products website: [Bra
 
 # Usage
 
-Make sure that you have correctly installed the drivers for your amplifier, and that the amplifier dongle(s) is/are plugged in or that the PC bluetooth is enabled, that the device is turned on, and that batteries are charged (see also official manual).
+Make sure that you have correctly installed the drivers for your amplifier, and that the amplifier dongle (or dongles in the case of a 64 channel system) is plugged in. Alternatively, with a <=32 channel device, you may be able to connect to a LiveAmp via your PC's built in bluetooth device---which must be enabled.  Make sure that the device is turned on, and that batteries are charged. It is always good to read the manual before operation.
 
   * Start the BrainAmpSeries app. You should see a window like the following.
 > ![liveamp.png](liveamp.png)
