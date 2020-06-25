@@ -49,7 +49,7 @@ The LiveAmp device has 3 available sampling rates: 250, 500, and 1000Hz. Note th
 
 ## LSL Trigger Output Style
 
-These check boxes determine the way that LSL handles device triggers. 
+These check boxes determine the way that this app handles device triggers in LSL. 
 
 Note that it is possible to enable neither, one of, or both trigger output styles simultaneously. They are not mutually exclusive.
 
