@@ -1,7 +1,7 @@
 # LSL-LiveAmp
 LSL connector for the LiveAmp device from Brain Products.
 
-To download, please click on the Release tab above for the latest versions.
+To download, please click on the Latest Release link to the right for the latest versions.
 
 Please note that you may need to install the Microsoft C++ redistributable packages ([here](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads)) in order to run the executables.
 
@@ -23,21 +23,21 @@ Make sure that you have correctly installed the drivers for your amplifier, and 
 
 ### Device Number
 
-If you know the serial number of the amplifier you want to connect with, you may enter it manually in the 'Device Number' field. Otherwise, you can scan for amplifiers using the 'Scan' button at the bottom of the GUI. After scanning, the'Available Devices' combo box will be populated with all available devices. The 'Device Number' field will automatically be filled with the number of the first device found. Whichever device is referred to here will be the device that is connected with at the 'Link' action. 
+If you know the serial number of the amplifier you want to connect with, you may enter it manually in the 'Device Number' field. Otherwise, you can scan for amplifiers using the 'Scan' button at the bottom of the GUI. After scanning, the 'Available Devices' combo box will be populated with all available devices. The 'Device Number' field will automatically be filled with the number of the first device found. Whichever device is referred to here will be the device that is connected with at the 'Link' action. 
 
-It is highly recommended, when connecting with more than one device, to turn one device at a time and connect before attempting to connect with another device. The 'Scan' action will not find any device that is alread connected by the 'Link' action.
+It is highly recommended, when connecting with more than one device, to turn one device on at a time and connect before attempting to connect with another device. The 'Scan' action will not find any device that is alread connected by the 'Link' action.
 
-### EEG/Bipolar/Aux Channles
+### EEG/Bipolar/Aux Channels
 
 You can adjust the number of EEG, Bipolar, and AUX channels that the device enables during Link action. Note that if the 'Overwrite on Channel Change' box is checked, changing these values will change the labels in the Channel Labels text box on the left side of the GUI. See the section on Channel Labels below for more information.
 
-### Enable ACC sensors
+### Enable ACC Sensors
 
-Check this box if you wish to include the LiveAmp accelorometer data in your data stream.
+Check this box if you wish to include the LiveAmp accelerometer data in your data stream.
 
 ### Sample Counter in EEG
 
-When this box is checked, the last channel in the device stream will be a number that increases by 1 at every sample (and periodically wraps around).
+When this box is checked, the last channel in the device stream will be a number that increases by 1 at every sample.
 
 ### Chunk Size
 
@@ -49,7 +49,7 @@ The LiveAmp device has 3 available sampling rates: 250, 500, and 1000Hz. Note th
 
 ## LSL Trigger Output Style
 
-These check boxes determine the way that LSL handles device triggers. Please see the file [explanation_of_trigger_marker_types.pdf]( https://github.com/brain-products/LSL-LiveAmp/blob/master/explanation_of_trigger_marker_types.pdf) for more details.
+These check boxes determine the way that LSL handles device triggers. 
 
 Note that it is possible to enable neither, one of, or both trigger output styles simultaneously. They are not mutually exclusive.
 
@@ -64,6 +64,10 @@ If the STE box is connected and the STE Out Mode is set to 'Sync' there will be 
 ### EEG Channel
 
 If this box is checked, extra channels will be added to the EEG/Bipolar/AUX/ACC stream corresponding to the requested trigger outputs. Rather than unsampled markers, these channels will output -1 if no trigger is available, else the value corresponding to the triggers in; and, in the case of the STE box in 'Sync' mode, the sync stream presented at the DSub output of the STE box. 
+
+### Further Information
+
+Please see the file [explanation_of_trigger_marker_types.pdf]( https://github.com/brain-products/LSL-LiveAmp/blob/master/explanation_of_trigger_marker_types.pdf) for more details.
 
 ## STE Out Mode
 
@@ -81,7 +85,7 @@ In 'Default' mode, nothing comes out of the STE box's output port and there is n
 
 When 'Scan' is pressed, the app will search for available LiveAmps. When 1 or more LiveAmps is found, the Serial Numbers of these devices will populate the 'Available Devices' combo box. The first device found will automatically be placed in the 'Device Number' field. When devices are available in the 'Available Devices' box, the user may choose from the available devices in the combo box by interacting with the combo box itself. The chosen device will be forwarded to the 'Device Number' field. If the selected device is unavailable at 'Link', the app will notify the user with an error message. The enumerated devices will also report the type of LiveAmp found (8, 16, 32, or 64 channel).
 
-The LiveAmp device has a simulator mode which can be activated with the 'Use Simulator' checkbox. This will create 
+The LiveAmp device has a simulator mode which can be activated with the 'Use Simulator' checkbox.
 
 ## Configuration file
 
@@ -98,6 +102,6 @@ The latest version of the LiveAmp Connector uses [INI](https://en.wikipedia.org/
 
 The LSL channel meta-data corresponds to the conventions of the XDF file format. These are described [here](https://github.com/sccn/xdf/wiki/EEG-Meta-Data).
 
-## Loading channel label files
+## Loading Channel Label Files
 
 Python users may automatically insert channel labels from a .bvef file into an LSL config file. To do so, please use the free utility [BVEF2lslconfig](https://github.com/brain-products/BVEF2lslconfig). You can find many electrode position files with channel labels for common cap configurations on the Brain Products website [here](https://www.brainproducts.com/downloads.php?kid=44). 
