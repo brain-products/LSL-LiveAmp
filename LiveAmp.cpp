@@ -1,5 +1,7 @@
 #include "LiveAmp.h"
 
+
+
 int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSampleCounter, bool bUseSim, int nRecordingMode) {
 
 	char HWI[20];	
@@ -17,19 +19,20 @@ int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSamp
 	if (!m_bWasEnumerated)
 	{
 		nRes = ampEnumerateDevices(HWI, sizeof(HWI), "LiveAmp", 0);
+		m_nConnectedDevices = nRes;
 		m_bWasEnumerated = true;
 	}
 
 	if (nRes <= 0)
 		throw std::runtime_error("No LiveAmp connected");
-	for(int i=0;i<nRes;i++)
-	{	
+	for (int i = 0; i < m_nConnectedDevices; i++)
+	{
 		int nResult;
 
-		HANDLE handle = NULL;			
+		HANDLE handle = NULL;
 		nResult = ampOpenDevice(i, &handle);
-			
-		if (nResult == AMP_OK) 
+
+		if (nResult == AMP_OK)
 		{
 
 			m_Handle = handle;
@@ -41,9 +44,9 @@ int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSamp
 				nRetVal = 0;
 				// set the device mode to recording
 				nResult = ampSetProperty(m_Handle, PG_DEVICE, 0, DPROP_I32_RecordingMode, &nRecordingMode, sizeof(nRecordingMode));
-				if (nResult != AMP_OK) 
+				if (nResult != AMP_OK)
 					throw std::runtime_error("Error setting acquisition mode, error code:  " + std::to_string(nResult));
-					
+
 				m_nRecordingMode = nRecordingMode;
 				m_sSerialNumber = std::string(sVar);
 				nResult = ampGetProperty(m_Handle, PG_DEVICE, 0, DPROP_I32_AvailableChannels, &m_nAvailableChannels, sizeof(m_nAvailableChannels));
@@ -67,16 +70,16 @@ int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSamp
 				m_bIs64 = false;
 				char sType[100];
 				nResult = ampGetProperty(m_Handle, PG_DEVICE, 0, DPROP_CHR_Type, &sType, sizeof(sType));
-				if (nResult != AMP_OK) 
+				if (nResult != AMP_OK)
 					throw std::runtime_error("Error getting device name, error code:  " +
 						std::to_string(nResult));
-					
+
 				if (!(strcmp("LiveAmp64", sType)))
 					m_bIs64 = true;
 
 				nResult = ampSetProperty(m_Handle, PG_DEVICE, 0, DPROP_F32_BaseSampleRate,
 					&fSamplingRate, sizeof(fSamplingRate));
-				if (nResult != AMP_OK) 
+				if (nResult != AMP_OK)
 					throw std::runtime_error("Error setting sampling rate, error code:  " +
 						std::to_string(nResult));
 				m_fSamplingRate = fSamplingRate;
@@ -103,7 +106,7 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>> &ampData, bool 
 		strcpy_s(HWI, "ANY"); 
 
 	nRes = ampEnumerateDevices(HWI, sizeof(HWI), "LiveAmp", 0);
-
+	m_nConnectedDevices = nRes;
 	if (nRes <= 0)			
 		throw std::runtime_error("No LiveAmp connected");
 	else {
@@ -118,7 +121,7 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>> &ampData, bool 
 				std::string msg = "Cannot open device: ";
 				msg.append (std::to_string(i));
 				msg.append("  error= " );
-				msg.append(std::to_string(nRes)); // TODO: error enumeration from liveamp driver
+				msg.append(std::to_string(nResult)); // TODO: error enumeration from liveamp driver
 				throw std::runtime_error(msg);
 			}		
 			
@@ -128,7 +131,7 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>> &ampData, bool 
 				std::string msg = "Cannot get device serial number: ";
 				msg.append (std::to_string(i));
 				msg.append("  error= " );
-				msg.append(std::to_string(nRes)); // TODO: error enumeration from liveamp driver
+				msg.append(std::to_string(nResult)); // TODO: error enumeration from liveamp driver
 				throw std::runtime_error(msg);
 			}		
 			else {
@@ -146,7 +149,7 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>> &ampData, bool 
 						std::string msg = "Cannot get device channel count: ";
 						msg.append(std::to_string(j));
 						msg.append("  error= ");
-						msg.append(std::to_string(nRes)); // TODO: error enumeration from liveamp driver
+						msg.append(std::to_string(nResult)); // TODO: error enumeration from liveamp driver
 						throw std::runtime_error(msg);
 					}
 					else

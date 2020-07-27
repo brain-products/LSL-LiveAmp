@@ -105,7 +105,7 @@ private slots:
 	void VersionsDialog();
 	void RefreshDevices();
 	void Link();
-    void CloseEvent(QCloseEvent *ev);
+    void closeEvent(QCloseEvent *ev);
 	void UpdateChannelLabelsWithEeg(int);
 	void UpdateChannelLabelsWithBipolar(int);
 	void UpdateChannelLabelsAux(int);

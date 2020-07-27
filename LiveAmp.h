@@ -8,10 +8,13 @@
 #include <vector>
 #include <string>
 
+
 class LiveAmp {
 
 private:
-	HANDLE m_Handle;                       
+
+	int m_nConnectedDevices;
+	HANDLE m_Handle;
 	std::string m_sSerialNumber;       
 	int m_nAvailableChannels;         
 	int m_nAvailableModules;            
@@ -45,7 +48,7 @@ private:
 
 public:
 
-	LiveAmp(void) { m_bWasEnumerated = false; }
+	LiveAmp(void) { m_bWasEnumerated = false; m_nConnectedDevices = -1; }
 	~LiveAmp() { ; }
 	
 	// get the serial numbers and channel counts of all available liveamps
