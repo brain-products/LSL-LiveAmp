@@ -1,4 +1,4 @@
-LiveAmp LSL Connector v1.19.2
+LiveAmp LSL Connector v1.19.3
 -BUGFIX: error code output on connect was reporting incorrect codes
 -BUGFIX: close event overried was not handled properly
 
