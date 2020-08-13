@@ -27,19 +27,19 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
@@ -78,19 +78,19 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <QtInstall>msvc2017</QtInstall>
+    <QtInstall>msvc2019</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="QtSettings">
-    <QtInstall>msvc2017_64</QtInstall>
+    <QtInstall>msvc2019_64</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <QtInstall>msvc2017</QtInstall>
+    <QtInstall>msvc2019</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="QtSettings">
-    <QtInstall>msvc2017_64</QtInstall>
+    <QtInstall>msvc2019_64</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
   </PropertyGroup>
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.props')">
@@ -109,18 +109,18 @@
       <SubSystem>Windows</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\Win32\Release;C:\Users\david.medine\LSL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Releases\Version 1.18.6.27\Win32\Release;C:\Users\david.medine\LSL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>liblsl32-debug.lib;%(AdditionalDependencies);LiveAmpLib2.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)bin\$(Platform)\$(Configuration)\platforms"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017\plugins\platforms\qwindowsd.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\platforms\qwindowsd.dll"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017\bin\Qt5Cored.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Cored.dll"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017\bin\Qt5Guid.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Guid.dll"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017\bin\Qt5Widgetsd.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Widgetsd.dll"
+echo F| xcopy /y "$(QTDIR)\plugins\platforms\qwindowsd.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\platforms\qwindowsd.dll"
+echo F| xcopy /y "$(QTDIR)\bin\Qt5Cored.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Cored.dll"
+echo F| xcopy /y "$(QTDIR)\bin\Qt5Guid.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Guid.dll"
+echo F| xcopy /y "$(QTDIR)\bin\Qt5Widgetsd.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Widgetsd.dll"
 echo F| xcopy /y "$(SolutionDir)..\liveamp_config.cfg" "$(SolutionDir)bin\$(Platform)\$(Configuration)\liveamp_config.cfg"
 echo F| xcopy /y "C:\Users\David.Medine\LSL\bin\liblsl32-debug.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\liblsl32-debug.dll"
-echo F| xcopy /y "C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\Win32\Release\LiveAmpLib2.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\LiveAmpLib2.dll"</Command>
+echo F| xcopy /y "C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Releases\Version 1.18.6.27\Win32\Release\LiveAmpLib2.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\LiveAmpLib2.dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -136,18 +136,18 @@ echo F| xcopy /y "C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2
       <SubSystem>Windows</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\x64\Release;C:\Users\david.medine\LSL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Releases\Version 1.18.6.27\x64\Release;C:\Users\david.medine\LSL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>liblsl64-debug.lib;%(AdditionalDependencies);LiveAmpLib2.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)bin\$(Platform)\$(Configuration)\platforms"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017_64\plugins\platforms\qwindowsd.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\platforms\qwindowsd.dll"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017_64\bin\Qt5Cored.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Cored.dll"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017_64\bin\Qt5Guid.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Guid.dll"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017_64\bin\Qt5Widgetsd.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Widgetsd.dll"
+echo F| xcopy /y "$(QTDIR)\plugins\platforms\qwindowsd.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\platforms\qwindowsd.dll"
+echo F| xcopy /y "$(QTDIR)\bin\Qt5Cored.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Cored.dll"
+echo F| xcopy /y "$(QTDIR)\bin\Qt5Guid.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Guid.dll"
+echo F| xcopy /y "$(QTDIR)\bin\Qt5Widgetsd.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Widgetsd.dll"
 echo F| xcopy /y "$(SolutionDir)..\default_config.cfg" "$(SolutionDir)bin\$(Platform)\$(Configuration)\default_config.cfg"
 echo F| xcopy /y "C:\Users\David.Medine\LSL\bin\liblsl64-debug.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\liblsl64-debug.dll"
-echo F| xcopy /y "C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\x64\Release\LiveAmpLib2.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\LiveAmpLib2.dll"</Command>
+echo F| xcopy /y "C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Releases\Version 1.18.6.27\x64\Release\LiveAmpLib2.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\LiveAmpLib2.dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -162,21 +162,21 @@ echo F| xcopy /y "C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2
       <SubSystem>Windows</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\Win32\Release;C:\Users\david.medine\LSL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Releases\Version 1.18.6.27\Win32\Release;C:\Users\david.medine\LSL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>liblsl32.lib;%(AdditionalDependencies);LiveAmpLib2.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)bin\$(Platform)\$(Configuration)\platforms"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017\plugins\platforms\qwindows.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\platforms\qwindows.dll"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017\bin\Qt5Core.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Core.dll"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017\bin\Qt5Gui.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Gui.dll"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017\bin\Qt5Widgets.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Widgets.dll"
+echo F| xcopy /y "$(QTDIR)\plugins\platforms\qwindows.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\platforms\qwindows.dll"
+echo F| xcopy /y "$(QTDIR)\bin\Qt5Core.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Core.dll"
+echo F| xcopy /y "$(QTDIR)\bin\Qt5Gui.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Gui.dll"
+echo F| xcopy /y "$(QTDIR)\bin\Qt5Widgets.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Widgets.dll"
 echo F| xcopy /y "$(SolutionDir)..\liveamp_config.cfg" "$(SolutionDir)bin\$(Platform)\$(Configuration)\liveamp_config.cfg"
 echo F| xcopy /y "$(SolutionDir)..\explanation_of_trigger_marker_types.pdf" "$(SolutionDir)bin\$(Platform)\$(Configuration)\explanation_of_trigger_marker_types.pdf"
 echo F| xcopy /y "$(SolutionDir)..\release_notes.txt" "$(SolutionDir)bin\$(Platform)\$(Configuration)\release_notes.txt"
 echo F| xcopy /y "C:\Users\David.Medine\LSL\bin\liblsl32.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\liblsl32.dll"
 echo F| xcopy /y "$(SolutionDir)..\LICENSE.txt" "$(SolutionDir)bin\$(Platform)\$(Configuration)\LICENSE.txt"
-echo F| xcopy /y "C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\Win32\Release\LiveAmpLib2.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\LiveAmpLib2.dll"
+echo F| xcopy /y "C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Releases\Version 1.18.6.27\Win32\Release\LiveAmpLib2.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\LiveAmpLib2.dll"
 mkdir "$(SolutionDir)bin\$(Platform)\LiveAmp_Win32"
 xcopy /y /s  "$(SolutionDir)bin\$(Platform)\$(Configuration)" "$(SolutionDir)bin\$(Platform)\LiveAmp_Win32"
 </Command>
@@ -195,21 +195,21 @@ xcopy /y /s  "$(SolutionDir)bin\$(Platform)\$(Configuration)" "$(SolutionDir)bin
       <SubSystem>Windows</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\x64\Release;C:\Users\david.medine\LSL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Releases\Version 1.18.6.27\x64\Release;C:\Users\david.medine\LSL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>liblsl64.lib;%(AdditionalDependencies);LiveAmpLib2.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)bin\$(Platform)\$(Configuration)\platforms"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017_64\plugins\platforms\qwindows.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\platforms\qwindows.dll"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017_64\bin\Qt5Core.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Core.dll"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017_64\bin\Qt5Gui.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Gui.dll"
-echo F| xcopy /y "C:\Qt\Qt5.13.1\5.13.1\msvc2017_64\bin\Qt5Widgets.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Widgets.dll"
+echo F| xcopy /y "$(QTDIR)\plugins\platforms\qwindows.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\platforms\qwindows.dll"
+echo F| xcopy /y "$(QTDIR)\bin\Qt5Core.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Core.dll"
+echo F| xcopy /y "$(QTDIR)\bin\Qt5Gui.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Gui.dll"
+echo F| xcopy /y "$(QTDIR)\bin\Qt5Widgets.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\Qt5Widgets.dll"
 echo F| xcopy /y "$(SolutionDir)..\liveamp_config.cfg" "$(SolutionDir)bin\$(Platform)\$(Configuration)\liveamp_config.cfg"
 echo F| xcopy /y "$(SolutionDir)..\explanation_of_trigger_marker_types.pdf" "$(SolutionDir)bin\$(Platform)\$(Configuration)\explanation_of_trigger_marker_types.pdf"
 echo F| xcopy /y "$(SolutionDir)..\release_notes.txt" "$(SolutionDir)bin\$(Platform)\$(Configuration)\release_notes.txt"
 echo F| xcopy /y "C:\Users\David.Medine\LSL\bin\liblsl64.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\liblsl64.dll"
 echo F| xcopy /y "$(SolutionDir)..\LICENSE.txt" "$(SolutionDir)bin\$(Platform)\$(Configuration)\LICENSE.txt"
-echo F| xcopy /y "C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Betas\Version 1.19.03.01\LiveAmpLib2-Releases\x64\Release\LiveAmpLib2.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\LiveAmpLib2.dll"
+echo F| xcopy /y "C:\Users\david.medine\Devel\SDK\Amplifiers\LiveAmp\LiveAmpLib2\Releases\Version 1.18.6.27\x64\Release\LiveAmpLib2.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\LiveAmpLib2.dll"
 mkdir "$(SolutionDir)bin\$(Platform)\LiveAmp_x64"
 xcopy /y /s  "$(SolutionDir)bin\$(Platform)\$(Configuration)" "$(SolutionDir)bin\$(Platform)\LiveAmp_x64"</Command>
     </PostBuildEvent>
