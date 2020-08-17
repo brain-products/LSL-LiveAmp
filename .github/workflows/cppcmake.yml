@@ -38,7 +38,7 @@ jobs:
         
     - name: build
       run: |
-           cmake --build build --config Release --target package
+           cmake --build build --config Release --target install
     
     - name: package
       run: |
