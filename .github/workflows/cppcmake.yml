@@ -39,7 +39,7 @@ jobs:
       run: |
            Invoke-WebRequest -Uri https://github.com/sccn/liblsl/releases/download/1.13.1/liblsl-1.13.1-Win32.zip -o liblsl.7z
            7z x liblsl.7z -oLSL
-      if: matrix.platform == 'Win32'
+      if: matrix.platform == 'Win64'
       run: |
            Invoke-WebRequest -Uri https://github.com/sccn/liblsl/releases/download/1.13.1/liblsl-1.13.1-Win64.zip -o liblsl.7z
            7z x liblsl.7z -oLSL
