@@ -85,7 +85,7 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2-preview
       with:
-        name: pkg-${{ matrix.platform }}
+        name: pkg-LiveAmp-${{ APP_VERSION }}-${{ matrix.platform }}
         path: build*/*
     
     
@@ -95,6 +95,7 @@ jobs:
     steps:
     
     - name: Download Artifacts
+      run: echo github.ref
       if: startsWith(github.ref, 'refs/tags/')
       uses: actions/download-artifact@v2-preview
       # By not specifying with: name:, it defaults to downloading all artifacts.
