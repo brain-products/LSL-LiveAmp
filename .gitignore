@@ -10,4 +10,4 @@ LiveAmp/*.cfg
 *.exe
 *.aps
 !.gitignore
-!LiveAmpLib2/*/*.dll
+!LiveAmpLib2/*/*/*.dll
