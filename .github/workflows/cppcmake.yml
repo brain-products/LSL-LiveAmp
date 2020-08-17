@@ -50,7 +50,7 @@ jobs:
       run: |
            cmake -S . -B build32 -Dlsl_DIR=LSL/share/LSL -A Win32
            
-    -name: configure cmake64
+    - name: configure cmake64
       if: matrix.platform == 'Win64'
       run: |
            cmake -S . -B build64 -Dlsl_DIR=LSL/share/LSL -A x64
