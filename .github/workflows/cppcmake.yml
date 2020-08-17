@@ -31,7 +31,7 @@ jobs:
       uses: jurplel/install-qt-action@v2
       if: matrix.platform == 'Win32'
       with:
-        arch: win32_msvc2015
+        arch: win32_msvc2019
         version: 5.15.0
         
     - name: Install Qt64 (Windows)
@@ -56,7 +56,7 @@ jobs:
     - name: configure cmake32
       if: matrix.platform == 'Win32'
       run: |
-           cmake -S . -B build32 -Dlsl_DIR=LSL/share/LSL -G "Visual Studio 14 2015" -A Win32
+           cmake -S . -B build32 -Dlsl_DIR=LSL/share/LSL -A Win32
            
     - name: configure cmake64
       if: matrix.platform == 'Win64'
