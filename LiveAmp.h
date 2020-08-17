@@ -7,7 +7,7 @@
 #include "Amplifier_LIB.h"
 #include <vector>
 #include <string>
-
+#include <stdexcept>
 
 class LiveAmp {
 
