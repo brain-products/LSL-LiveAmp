@@ -27,8 +27,16 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install Qt (Windows)
+    - name: Install Qt32 (Windows)
       uses: jurplel/install-qt-action@v2
+      if: matrix.platform == 'Win32'
+      with:
+        arch: win32_msvc2015
+        version: 5.15.0
+        
+    - name: Install Qt64 (Windows)
+      uses: jurplel/install-qt-action@v2
+      if: matrix.platform == 'Win64'
       with:
         version: 5.15.0
         
@@ -48,7 +56,7 @@ jobs:
     - name: configure cmake32
       if: matrix.platform == 'Win32'
       run: |
-           cmake -S . -B build32 -Dlsl_DIR=LSL/share/LSL -A Win32
+           cmake -S . -B build32 -Dlsl_DIR=LSL/share/LSL -G "Visual Studio 14 2015" -A Win32
            
     - name: configure cmake64
       if: matrix.platform == 'Win64'
