@@ -43,6 +43,9 @@ jobs:
         #$Env:LSL_URL/$Env:LSL_RELEASE_PREFIX$Env:LSL_RELEASE$Env:LSL_RELEASE_SUFFIX/liblsl-$Env:LSL_RELEASE-Win64.zip -o liblsl.7z
     - name: print github dot ref
       run: echo github.ref
+      run: echo ${{ github.ref }}
+      run: echo "$APP_VERSION"
+      run: echo $Env:APP_VERSION
       
     - name: Get LSL32
       if: matrix.platform == 'Win32'
@@ -87,7 +90,7 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2-preview
       with:
-        name: pkg-LiveAmp-$env:APP_VERSION-${{ matrix.platform }}
+        name: pkg-LiveAmp-$Env:APP_VERSION-${{ matrix.platform }}
         path: build*/*
     
     
