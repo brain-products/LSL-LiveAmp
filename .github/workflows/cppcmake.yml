@@ -4,6 +4,8 @@ on:
   push:
     tags:
     - v*.*
+    branches:
+    - ci_devel
     
 env:
   LSL_URL: 'https://github.com/sccn/liblsl/releases/tag/'
