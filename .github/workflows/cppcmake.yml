@@ -94,8 +94,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     
-    - name: Download Artifacts
+    - name: print github dot ref
       run: echo github.ref
+    
+    - name: Download Artifacts
       if: startsWith(github.ref, 'refs/tags/')
       uses: actions/download-artifact@v2-preview
       # By not specifying with: name:, it defaults to downloading all artifacts.
