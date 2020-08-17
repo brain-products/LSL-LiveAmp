@@ -34,38 +34,46 @@ jobs:
         
         #$Env:LSL_URL/$Env:LSL_RELEASE_PREFIX$Env:LSL_RELEASE$Env:LSL_RELEASE_SUFFIX/liblsl-$Env:LSL_RELEASE-Win64.zip -o liblsl.7z
            
-    - name: Get LSL
+    - name: Get LSL32
       if: matrix.platform == 'Win32'
       run: |
            Invoke-WebRequest -Uri https://github.com/sccn/liblsl/releases/download/1.13.1/liblsl-1.13.1-Win32.zip -o liblsl.7z
            7z x liblsl.7z -oLSL
+    - name: Get LSL64
       if: matrix.platform == 'Win64'
       run: |
            Invoke-WebRequest -Uri https://github.com/sccn/liblsl/releases/download/1.13.1/liblsl-1.13.1-Win64.zip -o liblsl.7z
            7z x liblsl.7z -oLSL
     
-    - name: configure cmake
+    - name: configure cmake32
       if: matrix.platform == 'Win32'
       run: |
            cmake -S . -B build32 -Dlsl_DIR=LSL/share/LSL -A Win32
+           
+    -name: configure cmake64
       if: matrix.platform == 'Win64'
       run: |
            cmake -S . -B build64 -Dlsl_DIR=LSL/share/LSL -A x64
         
-    - name: build
+    - name: build32
       if: matrix.platform == 'Win32'
       run: |
            cmake --build build32 --config Release -j --target install
+    - name: build64
       if: matrix.platform == 'Win64'
       run: |
            cmake --build build64 --config Release -j --target install
-    - name: package
+           
+    - name: package32
       if: matrix.platform == 'Win32'
       run: |
            cmake --build build32 --config Release -j --target package
+           
+    - name: package64
       if: matrix.platform == 'Win64'
       run: |
            cmake --build build64 --config Release -j --target package
+           
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2-preview
       with:
