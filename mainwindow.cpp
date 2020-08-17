@@ -29,6 +29,7 @@ int getSamplingRateIndex(int nSamplingRate)
 	}
 }
 
+
 MainWindow::MainWindow(QWidget *parent, const char* config_file): QMainWindow(parent),ui(new Ui::MainWindow) 
 {
 	
