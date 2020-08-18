@@ -36,7 +36,7 @@ jobs:
         
     - name: Install Qt64 (Windows)
       uses: jurplel/install-qt-action@v2
-      if: matrix.platform == 'Win64'
+      if: matrix.platform == 'x64'
       with:
         version: 5.15.0
         
@@ -54,14 +54,14 @@ jobs:
            Invoke-WebRequest -Uri https://github.com/sccn/liblsl/releases/download/1.13.1/liblsl-1.13.1-Win32.zip -o liblsl.7z
            7z x liblsl.7z -oLSL
     - name: Get LSL64
-      if: matrix.platform == 'Win64'
+      if: matrix.platform == 'x64'
       run: |
            Invoke-WebRequest -Uri https://github.com/sccn/liblsl/releases/download/1.13.1/liblsl-1.13.1-Win64.zip -o liblsl.7z
            7z x liblsl.7z -oLSL
     
     - name: configure cmake
       run: |
-           cmake -S . -B build-${{ matrix.platform }} -Dlsl_DIR=LSL/share/LSL -A Win32
+           cmake -S . -B build-${{ matrix.platform }} -Dlsl_DIR=LSL/share/LSL -A -${{ matrix.platform }}
                    
     - name: build
       run: |
