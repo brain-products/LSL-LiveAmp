@@ -74,7 +74,7 @@ jobs:
       uses: actions/upload-artifact@v2-preview
       with:
         name: pkg-LiveAmp-v1.19.5-${{ matrix.platform }}
-        path: build/*
+        path: build/*.zip
 
     
     
