@@ -108,7 +108,7 @@ jobs:
     # Official GitHub Upload-Asset action does not allow for uploading multiple files.
     # There are many community alternatives. Below is one that combines release and upload, with globbing.
     # See also: svenstaro/upload-release-action shogo82148/actions-upload-release-asset meeDamian/github-release csexton/release-asset-action
-    -name: print workflow
+    - name: print workflow
       run: echo ${{github.workflow}}
       
     - name: Create Release
