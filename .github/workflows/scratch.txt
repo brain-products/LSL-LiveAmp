@@ -32,3 +32,40 @@
       with:
         name: pkg-LiveAmp-v1.19.5-${{ matrix.platform }}
         path: build*
+		
+		
+		
+		
+		
+		
+		
+		
+		#$Env:LSL_URL/$Env:LSL_RELEASE_PREFIX$Env:LSL_RELEASE$Env:LSL_RELEASE_SUFFIX/liblsl-$Env:LSL_RELEASE-Win64.zip -o liblsl.7z
+#    - name: print github dot ref
+#      run: |
+#           echo github.ref
+#           echo ${{ github.ref }}
+#           echo "$APP_VERSION"
+#           echo $Env:APP_VERSION
+		
+		
+		
+		
+		
+		    - name: configure cmake
+      run: |
+           cmake -S . -B build-${{ matrix.platform }} -Dlsl_DIR=LSL/share/LSL -A -${{ matrix.platform }}
+                   
+    - name: build
+      run: |
+           cmake --build build-${{ matrix.platform }} --config Release -j --target install
+           
+    - name: package
+      run: |
+           cmake --build build-${{ matrix.platform }} --config Release -j --target package
+                      
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2-preview
+      with:
+        name: pkg-LiveAmp-v1.19.5-${{ matrix.platform }}
+        path: build-${{ matrix.platform }}/*
