@@ -1,0 +1,34 @@
+    - name: configure cmake32
+      if: matrix.platform == 'Win32'
+      run: |
+           cmake -S . -B build32 -Dlsl_DIR=LSL/share/LSL -A Win32
+           
+    - name: configure cmake64
+      if: matrix.platform == 'Win64'
+      run: |
+           cmake -S . -B build64 -Dlsl_DIR=LSL/share/LSL -A x64
+        
+    - name: build32
+      if: matrix.platform == 'Win32'
+      run: |
+           cmake --build build32 --config Release -j --target install
+    - name: build64
+      if: matrix.platform == 'Win64'
+      run: |
+           cmake --build build64 --config Release -j --target install
+           
+    - name: package32
+      if: matrix.platform == 'Win32'
+      run: |
+           cmake --build build32 --config Release -j --target package
+           
+    - name: package64
+      if: matrix.platform == 'Win64'
+      run: |
+           cmake --build build64 --config Release -j --target package
+           
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2-preview
+      with:
+        name: pkg-LiveAmp-v1.19.5-${{ matrix.platform }}
+        path: build*
