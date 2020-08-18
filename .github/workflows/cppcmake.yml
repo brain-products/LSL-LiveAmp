@@ -112,12 +112,12 @@ jobs:
       run: echo ${{runner.temp}}
       
     - name: Upload multiple assets to release
-    uses: csexton/release-asset-action@v2
-    with:
-    files: |
-      pkg-LiveAmp-v1.19.5-Win32.zip
-      pkg-LiveAmp-v1.19.5-Win64.zip      
-    github-token: ${{ secrets.GITHUB_TOKEN }}
+      uses: csexton/release-asset-action@v2
+      with:
+        files: |
+          pkg-LiveAmp-v1.19.5-Win32.zip
+          pkg-LiveAmp-v1.19.5-Win64.zip      
+        github-token: ${{ secrets.GITHUB_TOKEN }}
     #- name: Create Release
     #  if: startsWith(github.ref, 'refs/tags/')
     #  id: create_release
