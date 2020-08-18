@@ -121,5 +121,5 @@ jobs:
         prerelease: false
         # body_path: CHANGELOG.txt
         files: |
-          pkg-LiveAmp-v1.19.5-Win32
-          pkg-LiveAmp-v1.19.5-Win64
+          pkg-LiveAmp-v1.19.5-Win32.zip
+          pkg-LiveAmp-v1.19.5-Win64.zip
