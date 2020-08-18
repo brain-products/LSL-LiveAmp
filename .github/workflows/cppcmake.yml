@@ -123,6 +123,4 @@ jobs:
         draft: false
         prerelease: false
         # body_path: CHANGELOG.txt
-        files: |
-          *pkg-LiveAmp*
-          pkg-LiveAmp-v1.19.5-Win64.zip
+        filees:  /home/runner/work/LSL-LiveAmp/LSL-LiveAmp/pkg-LiveAmp-v1.19.5-Win64.zip
