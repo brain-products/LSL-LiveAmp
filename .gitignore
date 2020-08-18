@@ -9,3 +9,5 @@ LiveAmp/*.cfg
 *.dll
 *.exe
 *.aps
+!.gitignore
+!LiveAmpLib2/*/*/*.dll
