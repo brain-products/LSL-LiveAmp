@@ -54,6 +54,7 @@ public:
 	// get the serial numbers and channel counts of all available liveamps
 	void enumerate(std::vector<std::pair<std::string, int>> &ampData, bool useSim=false);
 
+	void Error(const std::string& sError, int nErrorNum);
 	//
 	int Setup(std::string serialNumberIn, float samplingRateIn = 500, bool bUseSampleCounter = false, bool useSim = false, int recordingModeIn = RM_NORMAL);
 
