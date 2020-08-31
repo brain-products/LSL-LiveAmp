@@ -1,3 +1,6 @@
+LiveAmp LSL Connector v1.19.6
+-PATCH: added more detailed error handling
+
 LiveAmp LSL Connector v1.19.5
 -PATCH: changed default config file name from liveamp_config.cfg to LiveAmp.cfg
 
