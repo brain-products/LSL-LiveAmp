@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5)
 
 set(PROJECT_VERSION_MAJOR 1)
 set(PROJECT_VERSION_MINOR 19)
-set(PROJECT_VERSION_PATCH 5)
+set(PROJECT_VERSION_PATCH 6)
 
 project(LiveAmp
 	LANGUAGES CXX
@@ -71,6 +71,10 @@ target_link_libraries(${PROJECT_NAME}
 	LSL::lsl
 	${LiveAmpLib2}
 )	
+
+include_directories(
+	LiveAmpLib2
+)
 
 function(addQtDeployToInstall target)
 	set(appbin "${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/${target}${CMAKE_EXECUTABLE_SUFFIX}")
