@@ -215,6 +215,8 @@ void MainWindow::LoadConfig(const QString& filename)
 	QSettings pt(filename, QSettings::IniFormat);
 
 	ui->deviceSerialNumber->setText(pt.value("settings/serialnumber", "x-0077").toString());
+	int nChannelCount = pt.value("settings/channelcount", 32).toInt();
+	ui->eegChannelCount->setMaximum((nChannelCount>32)?64:32);
 	ui->eegChannelCount->setValue(pt.value("settings/channelcount", 32).toInt());
 	m_nEegChannelCount = ui->eegChannelCount->value();
 	ui->bipolarChannelCount->setValue(pt.value("settings/bipolarcount", 0).toInt());
@@ -222,6 +224,7 @@ void MainWindow::LoadConfig(const QString& filename)
 	int idx = getSamplingRateIndex(pt.value("settings/samplingrate", 250).toInt());
 	ui->samplingRate->setCurrentIndex(idx);
 	ui->auxChannelCount->setValue(pt.value("settings/auxChannelCount", 0).toInt());
+	int nAuxCount = ui->auxChannelCount->value();
 	ui->useACC->setCheckState(pt.value("settings/useACC", true).toBool() ? Qt::Checked : Qt::Unchecked);
 	ui->unsampledMarkers->setCheckState(pt.value("settings/unsampledmarkers", true).toBool() ? Qt::Checked : Qt::Unchecked);
 	ui->sampledMarkersEEG->setCheckState(pt.value("settings/sampledmarkersEEG", false).toBool() ? Qt::Checked : Qt::Unchecked);
@@ -236,7 +239,6 @@ void MainWindow::LoadConfig(const QString& filename)
 	ui->channelLabels->clear();
 	ui->channelLabels->setPlainText(pt.value("channels/labels").toStringList().join('\n'));
 	UpdateChannelLabels();
-
 }
 
 void MainWindow::SaveConfig(const QString& filename) 
@@ -256,7 +258,6 @@ void MainWindow::SaveConfig(const QString& filename)
 	pt.setValue("triggerOutputMode", m_TriggerOutputMode);
 	pt.setValue("syncFrequency", ui->sbSyncFreq->value());
 	pt.endGroup();
-
 	pt.beginGroup("channels");
 	pt.setValue("labels", ui->channelLabels->toPlainText().split('\n'));
 	pt.endGroup();
@@ -310,13 +311,11 @@ void MainWindow::ResetGuiEnabling(bool b)
 		ui->triggerStyleGroup->setEnabled(true);
 		ui->linkButton->setEnabled(true);
 		ui->linkButton->setText("Link");
-		
 	}
 }
 
 void MainWindow::WaitMessage()
 {
-
 	QMessageBox msgBox;
 	msgBox.setWindowTitle("Please Wait");
 	msgBox.setIcon(QMessageBox::Information);
@@ -324,7 +323,6 @@ void MainWindow::WaitMessage()
 	msgBox.addButton(QMessageBox::Ok);
 	msgBox.exec();
 }
-
 
 void MainWindow::RefreshDevices()
 {
@@ -370,19 +368,15 @@ void MainWindow::RefreshDevices()
 	
 	this->setWindowTitle("LiveAmp Connector");
 	ui->deviceCb->blockSignals(true);
-	
 }
-
 
 // handle changes in chosen device
 void MainWindow::ChooseDevice(int which)
 {
-	
 	if(!m_psLiveAmpSns.empty())
 		ui->deviceSerialNumber->setText(QString(m_psLiveAmpSns[which].c_str()));
 	m_nEegChannelCount = m_pnUsableChannelsByDevice[ui->deviceCb->currentIndex()];
 	UpdateChannelCounters(m_nEegChannelCount);
-
 }
 
 // TODO: make this meaningful
@@ -505,15 +499,15 @@ void MainWindow::Link()
 
 				std::vector<int> bipolarIndices;
 				for (int i = 0; i < ampConfiguration.m_psBipolarChannelLabels.size(); i++)
-					bipolarIndices.push_back(i + 24);
+					bipolarIndices.push_back(i);
 
 				std::vector<int> auxIndices;
 				for (int i = 0; i < ui->auxChannelCount->value(); i++)
-					auxIndices.push_back(i + 32);
+					auxIndices.push_back(i);
 				if (ampConfiguration.m_psEegChannelLabels.size() + ampConfiguration.m_psBipolarChannelLabels.size() > 32)
 					if (!m_LiveAmp.is64())
 						nRet = QMessageBox::warning(this, tr("LiveAmp Connector"),
-							tr("This device is a LiveAmp32 but more than 32 EEG/BiPolar channels are requested.\n"
+							tr("The current device being linked is not a LiveAmp64, but more than 32 EEG/BiPolar channels are requested.\n"
 								"If you are trying to connect to a 64 channel device, power cycle and try again."),
 							QMessageBox::Ok);
 				
@@ -547,6 +541,7 @@ void MainWindow::Link()
 			this->setWindowTitle("LiveAmp Connector");
 			ResetGuiEnabling(true);
 			this->setCursor(Qt::ArrowCursor);
+			m_LiveAmp.close();
 			return;
 		}
 	}
