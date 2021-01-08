@@ -77,7 +77,7 @@ In 'Default' mode, nothing comes out of the STE box's output port and there is n
 
 ### STE/Triggers and LiveAmp64
 
-Please note that in the case of LiveAmp 64, Aux channels can be connected via STE through either the Master (channels 1-32) or Slave (channels 33-64) but triggers will only be read from the STE box connected to the Master device. This is also true for device triggers (i.e. mini headphone jack triggers). If 2 STE voxes are connected, only the Aux channels connected to the Master will be read.
+Please note that in the case of LiveAmp 64, Aux channels can be connected via STE through either the Master (channels 1-32) or Slave (channels 33-64) but triggers will only be read from the STE box connected to the Master device. This is also true for device triggers (i.e. mini headphone jack triggers). If 2 STE boxes are connected, only the Aux channels connected to the Master will be read.
 
  ## Link
 
