@@ -27,9 +27,9 @@ If you know the serial number of the amplifier you want to connect with, you may
 
 It is highly recommended, when connecting with more than one device, to turn one device on at a time and connect before attempting to connect with another device. The 'Scan' action will not find any device that is alread connected by the 'Link' action.
 
-### EEG/Bipolar/Aux Channels
+### EEG/Aux Channels
 
-You can adjust the number of EEG, Bipolar, and AUX channels that the device enables during Link action. Note that if the 'Overwrite on Channel Change' box is checked, changing these values will change the labels in the Channel Labels text box on the left side of the GUI. See the section on Channel Labels below for more information.
+You can adjust the number of EEG, and AUX channels that the device enables during Link action. Note that if the 'Overwrite on Channel Change' box is checked, changing these values will change the labels in the Channel Labels text box on the left side of the GUI. See the section on Channel Labels below for more information.
 
 ### Enable ACC Sensors
 
@@ -74,6 +74,10 @@ Please see the file [explanation_of_trigger_marker_types.pdf]( https://github.co
 This settings group controls the setup of the STE box's trigger outputs and how the LSL streams will correspondingly behave. 
 
 In 'Default' mode, nothing comes out of the STE box's output port and there is no corresponding LSL stream. In 'Mirror' mode, whatever is at the STE trigger input will be forwarded (in hardware) to the STE box's trigger output port. Since one has the option of recording triggers into the STE box, there is no reason to create an LSL Marker stream or extra EEG channel corresponding to these trigger events. In 'Sync' mode, a TTL pulse goes out of pin 1 of the STE box's output port. The sync frequency is adjustable and a corresponding LSL Marker stream and/or extra EEG channel will be created depending on the chosen 'LSL Trigger Output Style' settings.
+
+### STE/Triggers and LiveAmp64
+
+Please note that in the case of LiveAmp 64, Aux channels can be connected via STE through either the Master (channels 1-32) or Slave (channels 33-64) but triggers will only be read from the STE box connected to the Master device. This is also true for device triggers (i.e. mini headphone jack triggers). If 2 STE voxes are connected, only the Aux channels connected to the Master will be read.
 
  ## Link
 
