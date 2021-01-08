@@ -288,7 +288,7 @@ void LiveAmp::close(void) {
 	}
 }
 
-void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::vector<int>& pnBipolarIndices, const std::vector<int>& pnAuxIndices, bool bAccEnable) {
+void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::vector<int>& pnAuxIndices, bool bAccEnable) {
 
 	int nRes;
 	int nType;
@@ -298,7 +298,6 @@ void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::ve
 	char sUnit[256];
 	int nMaxEEGNumber = 0;
 	if (!m_pnEegIndices.empty())m_pnEegIndices.clear();
-	if (!m_pnBipolarIndices.empty())m_pnBipolarIndices.clear();
 	if (!m_pnAuxIndices.empty())m_pnAuxIndices.clear();
 	if (!m_pnAccIndices.empty())m_pnAccIndices.clear();
 	if (!m_pnTrigIndices.empty())m_pnTrigIndices.clear();
@@ -318,7 +317,7 @@ void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::ve
 		if (nRes != AMP_OK)
 			throw std::runtime_error("Error getting property for channel type: error code:  " + std::to_string(nRes));
 		nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_CHR_Unit, sUnit, sizeof(sUnit));
-		if (nType == CT_EEG) //|| nType == CT_BIP) 
+		if (nType == CT_EEG || nType == CT_BIP) 
 		{
 			for (std::vector<int>::const_iterator it = pnEegIndices.begin(); it != pnEegIndices.end(); ++it)
 			{
@@ -346,24 +345,6 @@ void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::ve
 		nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_I32_Type, &nType, sizeof(nType));
 		if (nRes != AMP_OK)
 			throw std::runtime_error("Error getting property for channel type: error code:  " + std::to_string(nRes));
-		if (nType == CT_BIP)
-		{
-			for (std::vector<int>::const_iterator it = pnBipolarIndices.begin(); it != pnBipolarIndices.end(); ++it)
-			{
-				if (*it + nMaxEEGNumber - (m_bIs64 ? 16 : 8) == i)
-				{
-					nEnable = 1;
-					nRes = ampSetProperty(m_Handle, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &nEnable, sizeof(nEnable));
-					if (nRes != AMP_OK)
-						throw std::runtime_error("Error SetProperty enable for EEG channels, error: " + std::to_string(nRes));
-					nRes = ampSetProperty(m_Handle, PG_CHANNEL, i, CPROP_I32_Type, &nBipType, sizeof(nBipType));
-					if (nRes != AMP_OK)
-						throw std::runtime_error("Error SetProperty enable BIPOLAR EEG channels, error: " + std::to_string(nRes));
-					m_pnBipolarIndices.push_back(i);
-					++m_nEnabledChannelCnt;
-				}
-			}
-		}
 
 		if (nType == CT_AUX)
 		{
@@ -419,7 +400,6 @@ void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::ve
 	}
 
 	m_nSampleCounterIdxInPush = m_pnEegIndices.size() +
-		m_pnBipolarIndices.size() +
 		m_pnAccIndices.size() +
 		m_pnAuxIndices.size() + 3;
 

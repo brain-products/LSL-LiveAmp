@@ -25,13 +25,11 @@ struct t_AmpConfiguration
 {
 	std::string m_sSerialNumber;
 	int m_nEEGChannelCount;
-	int m_nBipolarChannelCount;
 	int m_nAuxChannelCount;
 	double m_dSamplingRate;
 	int m_nChunkSize;
 	std::vector<std::string> m_psChannelLabels;
 	std::vector<std::string> m_psEegChannelLabels;
-	std::vector<std::string> m_psBipolarChannelLabels;
 	std::vector<std::string> m_psAuxChannelLabels;
 	bool m_bUnsampledMarkers;
 	bool m_bSampledMarkersEEG;
@@ -97,9 +95,7 @@ public:
     explicit MainWindow(QWidget *parent, const char* config_file);
     ~MainWindow();
     
-
 private slots:
-
     void LoadConfigDialog();
     void SaveConfigDialog();
 	void VersionsDialog();
@@ -107,7 +103,6 @@ private slots:
 	void Link();
     void closeEvent(QCloseEvent *ev);
 	void UpdateChannelLabelsWithEeg(int);
-	void UpdateChannelLabelsWithBipolar(int);
 	void UpdateChannelLabelsAux(int);
 	void UpdateChannelLabelsAcc(bool);
 	void UpdateChannelLabelsSampleCounter(bool);
@@ -119,11 +114,7 @@ private slots:
 //	void StopListenerLoop();
 
 private:
-
-	
-
 	t_AppVersion m_AppVersion;
-
 	int m_nEegChannelCount;
 	std::vector<int> m_pnUsableChannelsByDevice;
 	bool m_bOverwrite;
@@ -137,17 +128,13 @@ private:
 	bool m_bStop;
 	t_TriggerOutputMode m_TriggerOutputMode;
 
-
-
 	bool CheckConfiguration();
-	void UpdateChannelCounters(int n);
 	void WaitMessage();
 	void UpdateChannelLabels(void);
 	void ReadThread(t_AmpConfiguration ampConfiguration);
 	void LoadConfig(const QString& filename);
 	void SaveConfig(const QString& filename);
 	void ResetGuiEnabling(bool b);
-	
 };
 
 #endif // MAINWINDOW_H

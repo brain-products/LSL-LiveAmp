@@ -32,10 +32,9 @@ int getSamplingRateIndex(int nSamplingRate)
 
 MainWindow::MainWindow(QWidget *parent, const char* config_file): QMainWindow(parent),ui(new Ui::MainWindow) 
 {
-	
 	m_AppVersion.Major = 1;
-	m_AppVersion.Minor = 19;
-	m_AppVersion.Bugfix = 6;
+	m_AppVersion.Minor = 20;
+	m_AppVersion.Bugfix = 0;
 
 	m_bOverrideAutoUpdate = false;
 	ui->setupUi(this);
@@ -48,49 +47,22 @@ MainWindow::MainWindow(QWidget *parent, const char* config_file): QMainWindow(pa
 	QObject::connect(ui->actionVersions, SIGNAL(triggered()), this, SLOT(VersionsDialog()));
 	QObject::connect(ui->refreshDevices,SIGNAL(clicked()),this,SLOT(RefreshDevices()));
 	QObject::connect(ui->eegChannelCount, SIGNAL(valueChanged(int)),this, SLOT(UpdateChannelLabelsWithEeg(int)));
-	QObject::connect(ui->bipolarChannelCount, SIGNAL(valueChanged(int)),this, SLOT(UpdateChannelLabelsWithBipolar(int)));
 	QObject::connect(ui->deviceCb,SIGNAL(currentIndexChanged(int)),this,SLOT(ChooseDevice(int)));
-	//QObject::connect(ui->auxChannelCount, SIGNAL(valueChanged()), this, SLOT(UpdateChannelLabelsAux()));
 	QObject::connect(ui->auxChannelCount, SIGNAL(valueChanged(int)), this, SLOT(UpdateChannelLabelsAux(int)));
 	QObject::connect(ui->useACC, SIGNAL(clicked(bool)), this, SLOT(UpdateChannelLabelsAcc(bool)));
 	QObject::connect(ui->sampleCounter, SIGNAL(clicked(bool)), this, SLOT(UpdateChannelLabelsSampleCounter(bool)));
 	QObject::connect(ui->rbSync, SIGNAL(clicked(bool)), this, SLOT(RadioButtonBehavior(bool)));
 	QObject::connect(ui->rbMirror, SIGNAL(clicked(bool)), this, SLOT(RadioButtonBehavior(bool)));
-	
-}
-
-void MainWindow::UpdateChannelCounters(int n)
-{
-
-	ui->eegChannelCount->setMaximum(n);
-	ui->eegChannelCount->setValue(n-ui->bipolarChannelCount->value());
-	UpdateChannelLabelsWithBipolar(n);
-
 }
 
 void MainWindow::UpdateChannelLabels(void) 
 {
-
 	if (!ui->overwriteChannelLabels->isChecked())return;
-
 	int nEeg = ui->eegChannelCount->value();
-	int nBip = ui->bipolarChannelCount->value();
 	int nAux = ui->auxChannelCount->value();
 	int nAcc = (ui->useACC->isChecked()) ? 3 : 0;
 	bool bUseSampleCounter = ui->sampleCounter->isChecked();
-	int nMaxEEG = nEeg > 32 ? 64 : 32;
-	m_bOverrideAutoUpdate = true;
-	// TODO: parameterize this to follow behavior according to 
-	// available channels
-	if (nEeg > nMaxEEG - 8 && nBip != 0) {
-		ui->eegChannelCount->setMaximum(nMaxEEG - 8);
-		nEeg = nMaxEEG - 8;
-	}
-	else
-		ui->eegChannelCount->setMaximum(nMaxEEG);
-	m_bOverrideAutoUpdate = false;
-
-	int nTotalElectrodes = nEeg + nBip;
+	int nTotalElectrodes = nEeg;
 	std::string str;
 	std::vector<std::string> psEEGChannelLabels;
 	std::istringstream iss(ui->channelLabels->toPlainText().toStdString()); 
@@ -113,36 +85,19 @@ void MainWindow::UpdateChannelLabels(void)
 			psEEGChannelLabels.pop_back();
 
 	ui->channelLabels->clear();
-	for (int i = 1; i <= nTotalElectrodes; i++) {
-		if (i - 1 < psEEGChannelLabels.size())
-			str = psEEGChannelLabels[i - 1];
+	for (int i = 0; i < nTotalElectrodes; i++) {
+		if (i < psEEGChannelLabels.size())
+			str = psEEGChannelLabels[i];
 		else
 			str = std::to_string(i);
-		if (str.compare("ACC_X") == 0)
-			str = std::to_string(i);
-		if (str.compare("ACC_Y") == 0)
-			str = std::to_string(i);
-		if (str.compare("ACC_Z") == 0)
-			str = std::to_string(i);
-		if (i>ui->eegChannelCount->value())str += "*";
 		ui->channelLabels->appendPlainText(str.c_str());
 	}
-
 
 	for (int i = 1; i <= nAux; i++) 
 	{
 		str = "AUX_" + std::to_string(i);
 		ui->channelLabels->appendPlainText(str.c_str());
 	}
-
-	//if (nAcc == 3) 
-	//	ui->channelLabels->appendPlainText("ACC_X\nACC_Y\nACC_Z");
-
-	//if (bUseSampleCounter)
-	//{
-	//	str = "SampleCounter";
-	//	ui->channelLabels->appendPlainText(str.c_str());
-	//}
 }
 
 void MainWindow::UpdateChannelLabelsWithEeg(int n)
@@ -152,13 +107,6 @@ void MainWindow::UpdateChannelLabelsWithEeg(int n)
 	UpdateChannelLabels();
 }
 
-void MainWindow::UpdateChannelLabelsWithBipolar(int n)
-{
-	
-	if(!ui->overwriteChannelLabels->isChecked())return;
-	UpdateChannelLabels();
-	
-}
 
 void MainWindow::LoadConfigDialog() 
 {
@@ -219,7 +167,6 @@ void MainWindow::LoadConfig(const QString& filename)
 	ui->eegChannelCount->setMaximum((nChannelCount>32)?64:32);
 	ui->eegChannelCount->setValue(pt.value("settings/channelcount", 32).toInt());
 	m_nEegChannelCount = ui->eegChannelCount->value();
-	ui->bipolarChannelCount->setValue(pt.value("settings/bipolarcount", 0).toInt());
 	ui->chunkSize->setValue(pt.value("settings/chunksize", 10).toInt());
 	int idx = getSamplingRateIndex(pt.value("settings/samplingrate", 250).toInt());
 	ui->samplingRate->setCurrentIndex(idx);
@@ -247,7 +194,6 @@ void MainWindow::SaveConfig(const QString& filename)
 	pt.beginGroup("settings");
 	pt.setValue("serialnumber", ui->deviceSerialNumber->text());
 	pt.setValue("channelcount", ui->eegChannelCount->value());
-	pt.setValue("bipolarcount", ui->bipolarChannelCount->value());
 	pt.setValue("chunksize", ui->chunkSize->value());
 	pt.setValue("samplingrate", ui->samplingRate->currentText());
 	pt.setValue("auxChannelCount", ui->auxChannelCount->value());
@@ -346,8 +292,6 @@ void MainWindow::RefreshDevices()
 
 	if(!m_psLiveAmpSns.empty())m_psLiveAmpSns.clear();
 	if(!m_pnUsableChannelsByDevice.empty()) m_pnUsableChannelsByDevice.clear();
-
-	int foo = ui->deviceCb->count();
 	if(!ampData.empty()) {
 		ui->deviceCb->clear();
 		std::stringstream ss;
@@ -376,7 +320,10 @@ void MainWindow::ChooseDevice(int which)
 	if(!m_psLiveAmpSns.empty())
 		ui->deviceSerialNumber->setText(QString(m_psLiveAmpSns[which].c_str()));
 	m_nEegChannelCount = m_pnUsableChannelsByDevice[ui->deviceCb->currentIndex()];
-	UpdateChannelCounters(m_nEegChannelCount);
+	ui->eegChannelCount->setMaximum(m_nEegChannelCount);
+	if (!ui->overwriteChannelLabels->isChecked())return;
+	ui->eegChannelCount->setValue(m_nEegChannelCount);
+	UpdateChannelLabels();
 }
 
 // TODO: make this meaningful
@@ -405,7 +352,6 @@ void MainWindow::Link()
 		}
 		this->setWindowTitle("LiveAmp Connector");
 		ResetGuiEnabling(true);
-
 	}
 	else 
 	{
@@ -414,7 +360,6 @@ void MainWindow::Link()
 			t_AmpConfiguration ampConfiguration;
 			ampConfiguration.m_sSerialNumber = ui->deviceSerialNumber->text().toStdString();
 			ampConfiguration.m_nEEGChannelCount = ui->eegChannelCount->value();
-			ampConfiguration.m_nBipolarChannelCount = ui->bipolarChannelCount->value();
 			ampConfiguration.m_nAuxChannelCount = ui->auxChannelCount->value();
 			ampConfiguration.m_nChunkSize = ui->chunkSize->value();
 			ampConfiguration.m_dSamplingRate = (double)pnSamplingRates[ui->samplingRate->currentIndex()];
@@ -436,7 +381,6 @@ void MainWindow::Link()
 			ampConfiguration.m_psChannelLabels = psChannelLabels;
 
 			std::vector<std::string> psEegChannelLabels;
-			std::vector<std::string> psBipolarChannelLabels;
 			std::vector<std::string> psAuxChannelLabels;
 			int i=0;
 			for (std::vector<std::string>::iterator it = ampConfiguration.m_psChannelLabels.begin();
@@ -445,14 +389,11 @@ void MainWindow::Link()
 			{
 				if (i < ui->eegChannelCount->value())
 					psEegChannelLabels.push_back(*it);
-				else if (i - ui->eegChannelCount->value() < ui->bipolarChannelCount->value())
-					psBipolarChannelLabels.push_back(*it);
 				else
 					psAuxChannelLabels.push_back(*it);
 				i++;
 			}
 			ampConfiguration.m_psEegChannelLabels = psEegChannelLabels;
-			ampConfiguration.m_psBipolarChannelLabels = psBipolarChannelLabels;
 			ampConfiguration.m_psAuxChannelLabels = psAuxChannelLabels;
 
 			t_VersionNumber version;
@@ -497,14 +438,10 @@ void MainWindow::Link()
 				for (int i = 0; i < ampConfiguration.m_psEegChannelLabels.size(); i++)
 					eegIndices.push_back(i);
 
-				std::vector<int> bipolarIndices;
-				for (int i = 0; i < ampConfiguration.m_psBipolarChannelLabels.size(); i++)
-					bipolarIndices.push_back(i);
-
 				std::vector<int> auxIndices;
 				for (int i = 0; i < ui->auxChannelCount->value(); i++)
 					auxIndices.push_back(i);
-				if (ampConfiguration.m_psEegChannelLabels.size() + ampConfiguration.m_psBipolarChannelLabels.size() > 32)
+				if (ampConfiguration.m_psEegChannelLabels.size() > 32)
 					if (!m_LiveAmp.is64())
 						nRet = QMessageBox::warning(this, tr("LiveAmp Connector"),
 							tr("The current device being linked is not a LiveAmp64, but more than 32 EEG/BiPolar channels are requested.\n"
@@ -512,31 +449,18 @@ void MainWindow::Link()
 							QMessageBox::Ok);
 				
 				;// issue warning
-				m_LiveAmp.enableChannels(eegIndices, bipolarIndices, auxIndices, ampConfiguration.m_bUseACC);
+				m_LiveAmp.enableChannels(eegIndices, auxIndices, ampConfiguration.m_bUseACC);
 				this->setCursor(Qt::ArrowCursor);
 				// start reader thread
 				m_bStop = false;
-
-				
-				//m_pListenThread.reset(new ListenThread());
-				//m_pListenThread = new ListenThread();
-				//m_pListenThread->Setup(ampConfiguration, m_LiveAmp);
-				//QObject::connect(m_pListenThread, SIGNAL(RethrowListenerException(std::exception e)), this, SLOT(HandleListenerException(std::exception e)));
-				//QObject::connect(this, SIGNAL(StopListenerLoop()), m_pListenThread, SLOT(StopLoop()));
-				//QObject::connect(m_pListenThread, SIGNAL(finished()), this, SLOT(deleteLater()));
-				//m_pListenThread->start();
-
 				m_ptReaderThread.reset(new std::thread(&MainWindow::ReadThread, this, ampConfiguration));
-
 				this->setWindowTitle(("Streaming from LiveAmp " + sSerialNumber).c_str() );
 				ResetGuiEnabling(false);
 			}
 		}
 		catch(std::exception &e) 
 		{
-	
 			int errorcode=0; 
-			//if(m_LiveAmp.getHandle()!=NULL)m_LiveAmp.close();
 			QMessageBox::critical(this,"Error",(std::string("Could not perform Link action: ")+=e.what()).c_str(),QMessageBox::Ok);
 			this->setWindowTitle("LiveAmp Connector");
 			ResetGuiEnabling(true);
@@ -556,10 +480,8 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 	SetPriorityClass(GetCurrentThread(), HIGH_PRIORITY_CLASS);
 
 	int nChannelLabelCount = ampConfiguration.m_nEEGChannelCount +
-		ampConfiguration.m_nBipolarChannelCount +
 		ampConfiguration.m_nAuxChannelCount;
 		
-
 	int nTriggerIdx = nChannelLabelCount + (ampConfiguration.m_bUseACC ? 3 : 0);
 	int nSampleCounterIdx = nTriggerIdx + 3; // 2 (0 indexed) for the 2 triggers (i/o) and 2 for the CT_DIG channels which we ignore
 	int nExtraChannels = (ampConfiguration.m_bUseACC ? 3 : 0);
@@ -614,14 +536,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 					.append_child_value("type", "EEG")
 					.append_child_value("unit", "microvolts");
 			}
-			else if (k < ampConfiguration.m_nEEGChannelCount + ampConfiguration.m_nBipolarChannelCount)
-			{
-				channels.append_child("channel")
-					.append_child_value("label", ampConfiguration.m_psChannelLabels[k].c_str())
-					.append_child_value("type", "bipolar")
-					.append_child_value("unit", "microvolts");
-			}
-			else 
+			else
 			{
 				channels.append_child("channel")
 					.append_child_value("label", ampConfiguration.m_psChannelLabels[k].c_str())

@@ -33,7 +33,6 @@ private:
 	t_channelInfo m_pChannelInfo[100];
 	
 	std::vector<int> m_pnEegIndices;
-	std::vector<int> m_pnBipolarIndices;
 	std::vector<int> m_pnAuxIndices;
 	std::vector<int> m_pnAccIndices;
 	std::vector<int> m_pnTrigIndices;
@@ -62,7 +61,7 @@ public:
 	void close();
 
 	// enable requested channels: for now acc and aux are all or nothing, triggers are always on, and eeg channels can be selected
-	void enableChannels(const std::vector<int>& eegIndicesIn, const std::vector<int>& bipolarIndicesIn, const std::vector<int>& auxIndicesIn, bool accEnable);
+	void enableChannels(const std::vector<int>& eegIndicesIn, const std::vector<int>& auxIndicesIn, bool accEnable);
 
 	// activate the configured device with enabled channels
 	void startAcquisition(void);
@@ -86,7 +85,6 @@ public:
 	inline int               getAvailableChannels(void){return m_nAvailableChannels;}
 	inline int               getRecordingMode(void){return m_nRecordingMode;}
 	inline std::vector<int>& getEEGIndices(void){return m_pnEegIndices;}
-	inline std::vector<int>& getBipolarIndices(void){return m_pnBipolarIndices;}
 	inline std::vector<int>& getAuxIndices(void){return m_pnAuxIndices;}
 	inline std::vector<int>& getAccIndices(void){return m_pnAccIndices;}
 	inline std::vector<int>& getTrigIndices(void){return m_pnTrigIndices;}
