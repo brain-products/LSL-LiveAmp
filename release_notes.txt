@@ -1,3 +1,9 @@
+LiveAmp LSL Connector v1.20.1
+-BUGFIX: values in 1-bit trigger input match in string Marker output and EEG channel output
+
+LiveAmp LSL Connector v1.20.0
+-removed user control of bipolar channels
+
 LiveAmp LSL Connector v1.19.7
 -BUGFIX: correct EEG channel count reflected when loading LiveAmp64 config files
 -BUGFIX: aux channels are received properly in case of LiveAmp64
