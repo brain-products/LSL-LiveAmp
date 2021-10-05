@@ -120,7 +120,7 @@ int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSamp
 	int nRes = 5;
 	if (!m_bWasEnumerated)
 	{
-		nRes = ampEnumerateDevices(HWI, sizeof(HWI), "LiveAmp", 0);
+		nRes = ampEnumerateDevices(HWI, sizeof(HWI), "", 0);
 		m_nConnectedDevices = nRes;
 		m_bWasEnumerated = true;
 	}
@@ -208,7 +208,7 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>>& ampData, bool 
 	else
 		strcpy_s(HWI, "ANY");
 
-	nRes = ampEnumerateDevices(HWI, sizeof(HWI), "LiveAmp", 0);
+	nRes = ampEnumerateDevices(HWI, sizeof(HWI), "L", 0);
 	m_nConnectedDevices = nRes;
 	if (nRes <= 0)
 		throw std::runtime_error("No LiveAmp connected");
