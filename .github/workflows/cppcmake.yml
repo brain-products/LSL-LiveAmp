@@ -13,7 +13,7 @@ env:
   LSL_TAG: '1.13.1'
   LSL_RELEASE: '1.13.1'
   LSL_RELEASE_SUFFIX: ''
-  APP_VERSION: 'v1.20.1'
+  APP_VERSION: 'v1.20.2'
 
 jobs:
   build:
@@ -73,7 +73,7 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2-preview
       with:
-        name: pkg-LiveAmp-v1.19.7-${{ matrix.platform }}
+        name: pkg-LiveAmp-v1.20.2-${{ matrix.platform }}
         path: build/*.7z
 
     

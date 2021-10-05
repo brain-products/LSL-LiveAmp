@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent, const char* config_file): QMainWindow(pa
 {
 	m_AppVersion.Major = 1;
 	m_AppVersion.Minor = 20;
-	m_AppVersion.Bugfix = 1;
+	m_AppVersion.Bugfix = 2;
 
 	m_bOverrideAutoUpdate = false;
 	ui->setupUi(this);

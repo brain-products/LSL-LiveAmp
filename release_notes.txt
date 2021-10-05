@@ -1,3 +1,7 @@
+LiveAmp LSL Connector v1.20.2
+-PATCH: implemented improved error handling in LiveAmp class
+-BUGFIX: fixed implementation of simulated amplifier
+
 LiveAmp LSL Connector v1.20.1
 -BUGFIX: values in 1-bit trigger input match in string Marker output and EEG channel output
 
