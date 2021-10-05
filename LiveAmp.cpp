@@ -154,11 +154,11 @@ int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSamp
 				m_sSerialNumber = std::string(sVar);
 				nResult = ampGetProperty(m_Handle, PG_DEVICE, 0, DPROP_I32_AvailableChannels, &m_nAvailableChannels, sizeof(m_nAvailableChannels));
 				if (nResult != AMP_OK)
-					throw std::runtime_error("Error getting available channel count, error code:  " + std::to_string(nResult));
+					Error("Error getting available channel count, error code: ", nResult);
 
 				nResult = ampGetProperty(m_Handle, PG_DEVICE, 0, DPROP_I32_AvailableModules, &m_nAvailableModules, sizeof(m_nAvailableModules));
 				if (nResult != AMP_OK)
-					throw std::runtime_error("Error getting available module channel count, error code:  " + std::to_string(nResult));
+					Error("Error getting available module channel count, error code:  ", nResult);
 				char sModName[100];
 				for (int n = 0; n < m_nAvailableModules; n++)
 				{
@@ -174,8 +174,7 @@ int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSamp
 				char sType[100];
 				nResult = ampGetProperty(m_Handle, PG_DEVICE, 0, DPROP_CHR_Type, &sType, sizeof(sType));
 				if (nResult != AMP_OK)
-					throw std::runtime_error("Error getting device name, error code:  " +
-						std::to_string(nResult));
+					Error("Error getting device name, error code: ", nResult);
 
 				if (!(strcmp("LiveAmp64", sType)))
 					m_bIs64 = true;
@@ -183,8 +182,7 @@ int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSamp
 				nResult = ampSetProperty(m_Handle, PG_DEVICE, 0, DPROP_F32_BaseSampleRate,
 					&fSamplingRate, sizeof(fSamplingRate));
 				if (nResult != AMP_OK)
-					throw std::runtime_error("Error setting sampling rate, error code:  " +
-						std::to_string(nResult));
+					Error("Error setting sampling rate, error code: ", nResult);
 				m_fSamplingRate = fSamplingRate;
 				break;
 			}
@@ -208,7 +206,7 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>>& ampData, bool 
 	else
 		strcpy_s(HWI, "ANY");
 
-	nRes = ampEnumerateDevices(HWI, sizeof(HWI), "L", 0);
+	nRes = ampEnumerateDevices(HWI, sizeof(HWI), "", 0);
 	m_nConnectedDevices = nRes;
 	if (nRes <= 0)
 		throw std::runtime_error("No LiveAmp connected");
@@ -224,8 +222,7 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>>& ampData, bool 
 				std::string msg = "Cannot open device: ";
 				msg.append(std::to_string(i));
 				msg.append("  error= ");
-				msg.append(std::to_string(nResult)); // TODO: error enumeration from liveamp driver
-				throw std::runtime_error(msg);
+				Error(msg, nResult);
 			}
 
 			char sVar[20];
@@ -234,8 +231,7 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>>& ampData, bool 
 				std::string msg = "Cannot get device serial number: ";
 				msg.append(std::to_string(i));
 				msg.append("  error= ");
-				msg.append(std::to_string(nResult)); // TODO: error enumeration from liveamp driver
-				throw std::runtime_error(msg);
+				Error(msg, nResult);
 			}
 			else {
 
@@ -252,8 +248,7 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>>& ampData, bool 
 						std::string msg = "Cannot get device channel count: ";
 						msg.append(std::to_string(j));
 						msg.append("  error= ");
-						msg.append(std::to_string(nResult)); // TODO: error enumeration from liveamp driver
-						throw std::runtime_error(msg);
+						Error(msg, nResult);
 					}
 					else
 					{
@@ -268,8 +263,7 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>>& ampData, bool 
 			if (nResult != AMP_OK) {
 				std::string msg = "Cannot close device: ";
 				msg.append("  error= ");
-				msg.append(std::to_string(nResult));
-				throw std::runtime_error(msg);
+				Error(msg, nResult);
 			}
 		}
 	}
@@ -283,8 +277,7 @@ void LiveAmp::close(void) {
 		std::string msg = "Cannot close device: ";
 		msg.append(m_sSerialNumber.c_str());
 		msg.append("  error= ");
-		msg.append(std::to_string(nResult)); // TODO: error enumeration from liveamp driver
-		throw std::runtime_error(msg);
+		Error(msg, nResult);
 	}
 }
 
@@ -344,14 +337,14 @@ void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::ve
 		nEnable = 0;
 		nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_I32_Type, &nType, sizeof(nType));
 		if (nRes != AMP_OK)
-			throw std::runtime_error("Error getting property for channel type: error code:  " + std::to_string(nRes));
+			Error("Error getting property for channel type: error code:  ", nRes);
 
 		if (nType == CT_AUX)
 		{
 			nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_CHR_Function, &sValue, sizeof(sValue));
 
 			if (nRes != AMP_OK)
-				throw std::runtime_error("Error GetProperty CPROP_CHR_Function error: " + std::to_string(nRes));
+				Error("Error GetProperty CPROP_CHR_Function error: ", nRes);
 
 			// check that this aux channel is an acc channel
 			if (sValue[0] == 'X' || sValue[0] == 'Y' || sValue[0] == 'Z' || sValue[0] == 'x' || sValue[0] == 'y' || sValue[0] == 'z')
@@ -361,7 +354,7 @@ void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::ve
 					nEnable = 1;
 					nRes = ampSetProperty(m_Handle, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &nEnable, sizeof(nEnable));
 					if (nRes != AMP_OK)
-						throw std::runtime_error("Error SetProperty enable for ACC channels, error: " + std::to_string(nRes));
+						Error("Error SetProperty enable for ACC channels, error: ", nRes);
 					m_pnAccIndices.push_back(i);
 					++m_nEnabledChannelCnt;
 				}
@@ -376,7 +369,7 @@ void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::ve
 						nEnable = 1;
 						nRes = ampSetProperty(m_Handle, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &nEnable, sizeof(nEnable));
 						if (nRes != AMP_OK)
-							throw std::runtime_error("Error SetProperty enable for AUX channels, error: " + std::to_string(nRes));
+							Error("Error SetProperty enable for AUX channels, error: ", nRes);
 						m_pnAuxIndices.push_back(i);
 						++m_nEnabledChannelCnt;
 					}
@@ -466,7 +459,7 @@ void LiveAmp::startAcquisition(void) {
 
 	int nRes = ampStartAcquisition(m_Handle);
 	if (nRes != AMP_OK)
-		throw std::runtime_error("Error starting acquisition, error code:  " + std::to_string(nRes));
+		Error("Error starting acquisition, error code:  ", nRes);
 
 }
 
@@ -474,7 +467,7 @@ void LiveAmp::stopAcquisition(void) {
 
 	int nRes = ampStopAcquisition(m_Handle);
 	if (nRes != AMP_OK)
-		throw std::runtime_error("Error stopping acquisition, error code:  " + std::to_string(nRes));
+		Error("Error stopping acquisition, error code:  ", nRes);
 
 }
 
