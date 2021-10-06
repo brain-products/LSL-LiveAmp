@@ -68,8 +68,6 @@ void MainWindow::UpdateChannelLabels(void)
 	std::istringstream iss(ui->channelLabels->toPlainText().toStdString()); 
 	while (std::getline(iss, str, '\n'))
 		psEEGChannelLabels.push_back(str);
-	//str = ui->channelLabels->toPlainText().toStdString();
-	//boost::split(psEEGChannelLabels, str, boost::is_any_of("\n"));
 	int nVal = ui->eegChannelCount->value();
 	for (auto it = psEEGChannelLabels.begin(); it != psEEGChannelLabels.end();)
 	{
@@ -277,19 +275,15 @@ void MainWindow::RefreshDevices()
 	std::vector<std::pair<std::string, int>> ampData;
 	this->setCursor(Qt::WaitCursor);
 	this->setWindowTitle("Searching for Devices...");
-	//wait_message();
-	//ampData.clear();
 	try
 	{
-		m_LiveAmp.enumerate(ampData, ui->useSim->checkState());
+		m_pLiveAmp->enumerate(ampData, ui->useSim->checkState());
 	}
 	catch(std::exception &e) 
 	{
 		QMessageBox::critical(this,"Error",(std::string("Could not locate LiveAmp device(s): ")+=e.what()).c_str(),QMessageBox::Ok);
 	}
-
 	this->setCursor(Qt::ArrowCursor);
-
 	if(!m_psLiveAmpSns.empty())m_psLiveAmpSns.clear();
 	if(!m_pnUsableChannelsByDevice.empty()) m_pnUsableChannelsByDevice.clear();
 	if(!ampData.empty()) {
@@ -405,18 +399,18 @@ void MainWindow::Link()
 			this->setWindowTitle(QString(std::string("Connecting to "+sSerialNumber).c_str()));
 			this->setCursor(Qt::WaitCursor);
 			std::string error;
-			int nRet = m_LiveAmp.Setup(sSerialNumber, fSamplingRate, ampConfiguration.m_bUseSampleCounter, ampConfiguration.m_bUseSim, RM_NORMAL);
-			if (nRet != 0)
+			m_pLiveAmp.reset(new LiveAmp(sSerialNumber, fSamplingRate, ampConfiguration.m_bUseSampleCounter, ampConfiguration.m_bUseSim, RM_NORMAL));
+			/*if (nRet != 0)
 			{
 				QMessageBox::critical(this, tr("LiveAmp Connector"),
 					tr(("Cannot find device with serial number " + sSerialNumber).c_str()),
 					QMessageBox::Ok);
 				this->setWindowTitle("LiveAmp Connector");
 				this->setCursor(Qt::ArrowCursor);
-			}
-			else if(ui->auxChannelCount->value() > 0 && !m_LiveAmp.hasSTE())
+			}*/
+			if(ui->auxChannelCount->value() > 0 && !m_pLiveAmp->hasSTE())
 			{
-				nRet = QMessageBox::critical(this, tr("LiveAmp Connector"),
+				QMessageBox::critical(this, tr("LiveAmp Connector"),
 					tr("No STE box detected. Change number of AUX channels to 0 or connect STE and try again."),
 					QMessageBox::Ok);
 				this->setWindowTitle("LiveAmp Connector");
@@ -424,15 +418,15 @@ void MainWindow::Link()
 			}
 			else
 			{
-				if (m_LiveAmp.is64())
+				if (m_pLiveAmp->is64())
 				{
 					if (fSamplingRate == 1000.0)
-						nRet = QMessageBox::warning(this, tr("LiveAmp Connector"),
+						QMessageBox::warning(this, tr("LiveAmp Connector"),
 							tr("A sampling rate of 1kHz is not recommended for LiveAmp64"),
 							QMessageBox::Ok);
 				}
 				int nPulseWidth = (int)(.01 * fSamplingRate);
-				m_LiveAmp.setOutTriggerMode(m_TriggerOutputMode, 0, ui->sbSyncFreq->value(), nPulseWidth);
+				m_pLiveAmp->setOutTriggerMode(m_TriggerOutputMode, 0, ui->sbSyncFreq->value(), nPulseWidth);
 
 				std::vector<int> eegIndices;
 				for (int i = 0; i < ampConfiguration.m_psEegChannelLabels.size(); i++)
@@ -442,14 +436,14 @@ void MainWindow::Link()
 				for (int i = 0; i < ui->auxChannelCount->value(); i++)
 					auxIndices.push_back(i);
 				if (ampConfiguration.m_psEegChannelLabels.size() > 32)
-					if (!m_LiveAmp.is64())
-						nRet = QMessageBox::warning(this, tr("LiveAmp Connector"),
+					if (!m_pLiveAmp->is64())
+						QMessageBox::warning(this, tr("LiveAmp Connector"),
 							tr("The current device being linked is not a LiveAmp64, but more than 32 EEG/BiPolar channels are requested.\n"
 								"If you are trying to connect to a 64 channel device, power cycle and try again."),
 							QMessageBox::Ok);
 				
 				;// issue warning
-				m_LiveAmp.enableChannels(eegIndices, auxIndices, ampConfiguration.m_bUseACC);
+				m_pLiveAmp->enableChannels(eegIndices, auxIndices, ampConfiguration.m_bUseACC);
 				this->setCursor(Qt::ArrowCursor);
 				// start reader thread
 				m_bStop = false;
@@ -465,7 +459,7 @@ void MainWindow::Link()
 			this->setWindowTitle("LiveAmp Connector");
 			ResetGuiEnabling(true);
 			this->setCursor(Qt::ArrowCursor);
-			m_LiveAmp.close();
+			m_pLiveAmp->close();
 			return;
 		}
 	}
@@ -474,9 +468,9 @@ void MainWindow::Link()
 void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration) 
 {
 
-	lsl::stream_outlet *pMarkerOutlet = NULL;
-	lsl::stream_outlet *pMarkerOutletSTE = NULL;
-	lsl::stream_outlet *pMarkerOutletSync = NULL;
+	std::unique_ptr<lsl::stream_outlet> pMarkerOutlet;
+	std::unique_ptr<lsl::stream_outlet> pMarkerOutletSTE;
+	std::unique_ptr<lsl::stream_outlet> pMarkerOutletSync;
 	SetPriorityClass(GetCurrentThread(), HIGH_PRIORITY_CLASS);
 
 	int nChannelLabelCount = ampConfiguration.m_nEEGChannelCount +
@@ -488,7 +482,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 	if (ampConfiguration.m_bSampledMarkersEEG)
 	{
 		nExtraChannels++;
-		if (m_LiveAmp.hasSTE())
+		if (m_pLiveAmp->hasSTE())
 		{
 			nExtraChannels++;
 			if (ampConfiguration.m_bIsSTEInSync)
@@ -501,7 +495,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 	int nTotalOutputChannelCount = nChannelLabelCount + nExtraChannels;
 	int nEEGAuxAndAccChannelCount = nChannelLabelCount + (ampConfiguration.m_bUseACC ? 3 : 0);
 	std::vector<float> pfSampleBuffer(nTotalOutputChannelCount);
-	std::vector<std::vector<float>> ppfLiveAmpBuffer(ampConfiguration.m_nChunkSize,std::vector<float>(m_LiveAmp.getEnabledChannelCnt()));
+	std::vector<std::vector<float>> ppfLiveAmpBuffer(ampConfiguration.m_nChunkSize,std::vector<float>(m_pLiveAmp->getEnabledChannelCnt()));
 	std::vector<std::vector<float>> ppfChunkBuffer(ampConfiguration.m_nChunkSize,std::vector<float>(nTotalOutputChannelCount));
 
 	float fMrkr;
@@ -521,9 +515,9 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 
 	try 
 	{
-		m_LiveAmp.startAcquisition();
-		std::vector<int>pnTriggerIndeces = m_LiveAmp.getTrigIndices();
-		lsl::stream_info dataInfo("LiveAmpSN-" + m_LiveAmp.getSerialNumber(),"EEG", nTotalOutputChannelCount, ampConfiguration.m_dSamplingRate, lsl::cf_float32,"LiveAmpSN-" + m_LiveAmp.getSerialNumber());
+		m_pLiveAmp->startAcquisition();
+		std::vector<int>pnTriggerIndeces = m_pLiveAmp->getTrigIndices();
+		lsl::stream_info dataInfo("LiveAmpSN-" + m_pLiveAmp->getSerialNumber(),"EEG", nTotalOutputChannelCount, ampConfiguration.m_dSamplingRate, lsl::cf_float32,"LiveAmpSN-" + m_pLiveAmp->getSerialNumber());
 		lsl::xml_element channels = dataInfo.desc().append_child("channels");
 
 		for (int k = 0; k < nChannelLabelCount; k++)
@@ -579,7 +573,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 		}
 
 		// only create this channel if the STE is connected
-		if (ampConfiguration.m_bSampledMarkersEEG && m_LiveAmp.hasSTE()) {
+		if (ampConfiguration.m_bSampledMarkersEEG && m_pLiveAmp->hasSTE()) {
 			channels.append_child("channel")
 				.append_child_value("label", "STETriggerIn")
 				.append_child_value("type", "Trigger")
@@ -587,7 +581,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 		}
 
 
-		if (ampConfiguration.m_bSampledMarkersEEG && m_LiveAmp.hasSTE() && ampConfiguration.m_bIsSTEInSync)
+		if (ampConfiguration.m_bSampledMarkersEEG && m_pLiveAmp->hasSTE() && ampConfiguration.m_bIsSTEInSync)
 		{
 			channels.append_child("channel")
 				.append_child_value("label", "STESync")
@@ -621,23 +615,23 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 
 		// create marker streaminfo and outlet
 		if(ampConfiguration.m_bUnsampledMarkers) {
-			lsl::stream_info markerInfo("LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "-DeviceTrigger","Markers", 1, 0, lsl::cf_string,"LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "_DeviceTrigger");
-			pMarkerOutlet = new lsl::stream_outlet(markerInfo);
+			lsl::stream_info markerInfo("LiveAmpSN-" + m_pLiveAmp->getSerialNumber() + "-DeviceTrigger","Markers", 1, 0, lsl::cf_string,"LiveAmpSN-" + m_pLiveAmp->getSerialNumber() + "_DeviceTrigger");
+			pMarkerOutlet.reset(new lsl::stream_outlet(markerInfo));
 
-			if (m_LiveAmp.hasSTE())
+			if (m_pLiveAmp->hasSTE())
 			{
-				lsl::stream_info markerInfoSTE("LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "-STETriggerIn", "Markers", 1, 0, lsl::cf_string, "LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "_STETriggerIn");
-				pMarkerOutletSTE = new lsl::stream_outlet(markerInfoSTE);
+				lsl::stream_info markerInfoSTE("LiveAmpSN-" + m_pLiveAmp->getSerialNumber() + "-STETriggerIn", "Markers", 1, 0, lsl::cf_string, "LiveAmpSN-" + m_pLiveAmp->getSerialNumber() + "_STETriggerIn");
+				pMarkerOutletSTE.reset(new lsl::stream_outlet(markerInfoSTE));
 				if (ampConfiguration.m_bIsSTEInSync)
 				{
-					lsl::stream_info markerInfoSync("LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "-STESync", "Markers", 1, 0, lsl::cf_string, "LiveAmpSN-" + m_LiveAmp.getSerialNumber() + "_STESync");
-					pMarkerOutletSync = new lsl::stream_outlet(markerInfoSync);
+					lsl::stream_info markerInfoSync("LiveAmpSN-" + m_pLiveAmp->getSerialNumber() + "-STESync", "Markers", 1, 0, lsl::cf_string, "LiveAmpSN-" + m_pLiveAmp->getSerialNumber() + "_STESync");
+					pMarkerOutletSync.reset(new lsl::stream_outlet(markerInfoSync));
 				}
 			}
 		}	
 
 		int nLastMrk = 0;
-		int32_t nBufferSize = (ampConfiguration.m_nChunkSize) * m_LiveAmp.getSampleSize();
+		int32_t nBufferSize = (ampConfiguration.m_nChunkSize) * m_pLiveAmp->getSampleSize();
 		pBuffer =  new BYTE[nBufferSize];
 		ppfChunkBuffer.clear();
 		int64_t nSamplesRead;
@@ -646,14 +640,14 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 
 
 		while (!m_bStop) {
-			nSamplesRead = m_LiveAmp.pullAmpData(pBuffer, nBufferSize);
+			nSamplesRead = m_pLiveAmp->pullAmpData(pBuffer, nBufferSize);
 			if (nSamplesRead <= 0){
 				// CPU saver, this is ok even at higher sampling rates
 				std::this_thread::sleep_for(std::chrono::milliseconds(1));
 				continue;
 			}
 
-			m_LiveAmp.pushAmpData(pBuffer, nBufferSize, nSamplesRead, ppfLiveAmpBuffer);
+			m_pLiveAmp->pushAmpData(pBuffer, nBufferSize, nSamplesRead, ppfLiveAmpBuffer);
 			double dNow = lsl::local_clock();
 			nSampleCount = (int)ppfLiveAmpBuffer.size();
 			
@@ -678,7 +672,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 					if(ampConfiguration.m_bSampledMarkersEEG)
 						pfSampleBuffer.push_back(fMrkr);
 
-					if (m_LiveAmp.hasSTE() && ampConfiguration.m_bSampledMarkersEEG)
+					if (m_pLiveAmp->hasSTE() && ampConfiguration.m_bSampledMarkersEEG)
 					{
 						float fMrkrTmpIn = (float)(((int)ppfLiveAmpBuffer[i][nTriggerIdx] >> 8));
 						fMrkrIn = (fMrkrTmpIn == fPrevMarkerIn ? -1.0 : fMrkrTmpIn);
@@ -716,7 +710,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 							pMarkerOutlet->push_sample(&sMrkr, dNow + (double)(s + 1 - nSampleCount) / ampConfiguration.m_dSamplingRate);
 						}
 						fPrevUMarker = fUMrkr;
-						if (m_LiveAmp.hasSTE())
+						if (m_pLiveAmp->hasSTE())
 						{
 							fUMrkrIn = (float)(((int)ppfLiveAmpBuffer[s][nTriggerIdx] >> 8));
 							if (fUMrkrIn != fPrevUMarkerIn) 
@@ -752,22 +746,11 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 	if(pBuffer != NULL)
 		delete[] pBuffer;
 	pBuffer = NULL;
-	// cleanup (if necessary)
-	if (ampConfiguration.m_bUnsampledMarkers)
-	{
-		delete(pMarkerOutlet);
-		if (m_LiveAmp.hasSTE())
-		{
-			delete(pMarkerOutletSTE);
-			if (ampConfiguration.m_bIsSTEInSync)
-				delete(pMarkerOutletSync);
-		}
-
-	}
+	
 	try
 	{
-		m_LiveAmp.stopAcquisition(); 
-		m_LiveAmp.close();
+		m_pLiveAmp->stopAcquisition(); 
+		m_pLiveAmp->close();
 	}
 	catch(std::exception &e) 
 	{

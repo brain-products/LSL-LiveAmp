@@ -104,10 +104,9 @@ void LiveAmp::Error(const std::string& sError, int nErrorNum)
 	throw std::runtime_error(sFullError);
 }
 
-int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSampleCounter, bool bUseSim, int nRecordingMode) {
+LiveAmp::LiveAmp(std::string sSerialNumber, float fSamplingRate, bool bUseSampleCounter, bool bUseSim, int nRecordingMode) {
 
 	char HWI[20];
-	m_bIsClosed = false;
 	m_bHasSTE = false;
 	m_bIs64 = false;
 	m_bUseSampleCounter = bUseSampleCounter;
@@ -118,16 +117,16 @@ int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSamp
 
 	int nRetVal = -1;
 	int nRes = 5;
-	if (!m_bWasEnumerated)
-	{
-		nRes = ampEnumerateDevices(HWI, sizeof(HWI), "", 0);
-		m_nConnectedDevices = nRes;
-		m_bWasEnumerated = true;
-	}
+	//if (!m_bWasEnumerated)
+	//{
+	//	nRes = ampEnumerateDevices(HWI, sizeof(HWI), "", 0);
+	//	m_nConnectedDevices = nRes;
+	//	m_bWasEnumerated = true;
+	//}
 
 	if (nRes <= 0)
 		throw std::runtime_error("No LiveAmp connected");
-	for (int i = 0; i < m_nConnectedDevices; i++)
+	for (int i = 0; i < 50; i++)
 	{
 		int nResult;
 
@@ -139,6 +138,7 @@ int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSamp
 
 			m_Handle = handle;
 			char sVar[20];
+			sVar[19] = 0;
 			nResult = ampGetProperty(handle, PG_DEVICE, i, DPROP_CHR_SerialNumber, sVar, sizeof(sVar));
 
 			// got a hit!
@@ -159,7 +159,7 @@ int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSamp
 				nResult = ampGetProperty(m_Handle, PG_DEVICE, 0, DPROP_I32_AvailableModules, &m_nAvailableModules, sizeof(m_nAvailableModules));
 				if (nResult != AMP_OK)
 					Error("Error getting available module channel count, error code:  ", nResult);
-				char sModName[100];
+				char sModName[100]; sModName[99] = 0;
 				for (int n = 0; n < m_nAvailableModules; n++)
 				{
 					nResult = ampGetProperty(m_Handle, PG_MODULE, n, MPROP_CHR_Type, &sModName, sizeof(sModName));
@@ -171,7 +171,7 @@ int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSamp
 				}
 
 				m_bIs64 = false;
-				char sType[100];
+				char sType[100]; sType[99] = 0;
 				nResult = ampGetProperty(m_Handle, PG_DEVICE, 0, DPROP_CHR_Type, &sType, sizeof(sType));
 				if (nResult != AMP_OK)
 					Error("Error getting device name, error code: ", nResult);
@@ -183,22 +183,22 @@ int LiveAmp::Setup(std::string sSerialNumber, float fSamplingRate, bool bUseSamp
 					&fSamplingRate, sizeof(fSamplingRate));
 				if (nResult != AMP_OK)
 					Error("Error setting sampling rate, error code: ", nResult);
-				m_fSamplingRate = fSamplingRate;
+				m_fSamplingRate = fSamplingRate;		
 				break;
 			}
 		}
 	}
-	return nRetVal;
+	m_bIsClosed = false;
 }
 
-void LiveAmp::enumerate(std::vector<std::pair<std::string, int>>& ampData, bool useSim) {
+int LiveAmp::enumerate(std::vector<std::pair<std::string, int>>& ampData, bool useSim) {
 
 	int nRes;
 	char HWI[20];
-
+	int nConnectedDevices;
 	if (!ampData.empty()) {
 		throw std::runtime_error("Input ampData vector isn't empty");
-		return;
+		return -1;
 	}
 
 	if (useSim)
@@ -207,11 +207,10 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>>& ampData, bool 
 		strcpy_s(HWI, "ANY");
 
 	nRes = ampEnumerateDevices(HWI, sizeof(HWI), "", 0);
-	m_nConnectedDevices = nRes;
+	nConnectedDevices = nRes;
 	if (nRes <= 0)
 		throw std::runtime_error("No LiveAmp connected");
 	else {
-		m_bWasEnumerated = true;
 		for (int i = 0; i < nRes; i++)
 		{
 			int nResult;
@@ -225,7 +224,7 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>>& ampData, bool 
 				Error(msg, nResult);
 			}
 
-			char sVar[20];
+			char sVar[20]; sVar[19] = 0;
 			nResult = ampGetProperty(handle, PG_DEVICE, i, DPROP_CHR_SerialNumber, sVar, sizeof(sVar));
 			if (nResult != AMP_OK) {
 				std::string msg = "Cannot get device serial number: ";
@@ -239,7 +238,7 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>>& ampData, bool 
 				//int32_t nAvailableChannels;
 				nResult = ampGetProperty(handle, PG_DEVICE, 0, DPROP_I32_AvailableModules, &nAvailableModules, sizeof(nAvailableModules));
 				int32_t nVar;
-				char sModName[100];
+				char sModName[100]; sModName[99] = 0;
 				int nTotalAvailableChannels = 0;
 				for (int j = 0; j < nAvailableModules; j++)
 				{
@@ -267,11 +266,12 @@ void LiveAmp::enumerate(std::vector<std::pair<std::string, int>>& ampData, bool 
 			}
 		}
 	}
+	return nConnectedDevices;
 }
 
 
 void LiveAmp::close(void) {
-
+	if (m_bIsClosed)return;
 	int nResult = ampCloseDevice(m_Handle);
 	if (nResult != AMP_OK) {
 		std::string msg = "Cannot close device: ";
@@ -279,6 +279,7 @@ void LiveAmp::close(void) {
 		msg.append("  error= ");
 		Error(msg, nResult);
 	}
+	m_bIsClosed = true;
 }
 
 void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::vector<int>& pnAuxIndices, bool bAccEnable) {
@@ -392,34 +393,35 @@ void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::ve
 		}
 	}
 
-	m_nSampleCounterIdxInPush = m_pnEegIndices.size() +
+	m_nSampleCounterIdxInPush = (int)(m_pnEegIndices.size() +
 		m_pnAccIndices.size() +
-		m_pnAuxIndices.size() + 3;
+		m_pnAuxIndices.size()) + 3;
 
 	int nDataType;
 	float fResolution;
 	int nChannelType;
 	float fGain;
-	int nCnt = 0;
 	m_nSampleSize = 0;
 	int nEnabled;
 
 	nRes = ampStartAcquisition(m_Handle);
+	m_pChannelInfo.clear();
 	for (int i = 0; i < m_nAvailableChannels; i++)
 	{
 		nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_B32_RecordingEnabled, &nEnabled, sizeof(nEnabled));
 
 		if (nEnabled)
 		{
+			t_channelInfo channelInfo;
 			nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_I32_DataType, &nDataType, sizeof(nDataType));
-			m_pChannelInfo[nCnt].m_nDataType = nDataType;
+			channelInfo.m_nDataType = nDataType;
 			nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_F32_Resolution, &fResolution, sizeof(fResolution));
-			m_pChannelInfo[nCnt].m_fResolution = fResolution;
+			channelInfo.m_fResolution = fResolution;
 			nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_I32_Type, &nChannelType, sizeof(nChannelType));
-			m_pChannelInfo[nCnt].m_nChannelType = nChannelType;
+			channelInfo.m_nChannelType = nChannelType;
 			nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_F32_Gain, &fGain, sizeof(fGain));
-			m_pChannelInfo[nCnt].m_fGain = fGain;
-			nCnt++;
+			channelInfo.m_fGain = fGain;
+			m_pChannelInfo.push_back(channelInfo);
 			switch (nDataType)
 			{
 			case DT_INT16:
@@ -451,7 +453,7 @@ void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::ve
 	// add the sample counter size
 	m_nSampleSize += 8;
 	nRes = ampStopAcquisition(m_Handle);
-	if (nCnt != m_nEnabledChannelCnt)
+	if (m_pChannelInfo.size() != m_nEnabledChannelCnt)
 		throw std::runtime_error((std::string("Error: Enabled channel counter mismatch in device ") + m_sSerialNumber).c_str());
 }
 
@@ -579,7 +581,7 @@ void LiveAmp::pushAmpData(BYTE* pBuffer, int nBufferSize, int64_t nSamplesRead, 
 void LiveAmp::setOutTriggerMode(t_TriggerOutputMode triggerMode, int nSyncPin, int nFreq, int nPulseWidth)
 {
 	if (!m_bHasSTE)return;
-	int nPer = m_fSamplingRate / nFreq;
+	int nPer = (int)m_fSamplingRate / nFreq;
 	int res = ampSetProperty(m_Handle, PG_MODULE, m_nSTEIdx, MPROP_I32_TriggerOutMode, &triggerMode, sizeof(triggerMode));
 
 	res = ampSetProperty(m_Handle, PG_MODULE, m_nSTEIdx, MPROP_I32_TriggerSyncPin, &nSyncPin, sizeof(nSyncPin));

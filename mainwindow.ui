@@ -115,14 +115,14 @@ PO10 </string>
        <item row="0" column="0">
         <widget class="QLabel" name="label_4">
          <property name="text">
-          <string>Device Number</string>
+          <string>Device Serial Number</string>
          </property>
         </widget>
        </item>
        <item row="2" column="0">
         <widget class="QLineEdit" name="deviceSerialNumber">
          <property name="toolTip">
-          <string>The number of the USB device (if multiple); the first one is #0.</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="inputMask">
           <string/>
@@ -294,7 +294,10 @@ PO10 </string>
           <string>This will scan for all available LiveAmps. It takes a few moments to connect. You need to have the device serial number (written on the back) in order to connect to it. You can also enter it into the Device Number box by hand.</string>
          </property>
          <property name="text">
-          <string>Scan</string>
+          <string>Scan for Devices</string>
+         </property>
+         <property name="shortcut">
+          <string>Ctrl+S</string>
          </property>
         </widget>
        </item>
@@ -311,7 +314,7 @@ PO10 </string>
        <item row="5" column="0">
         <widget class="QLabel" name="label_11">
          <property name="text">
-          <string>Use Simulator</string>
+          <string>Scan for Simulators</string>
          </property>
         </widget>
        </item>

@@ -13,15 +13,14 @@ class LiveAmp {
 
 private:
 
-	int m_nConnectedDevices;
-	HANDLE m_Handle;
+	HANDLE m_Handle = nullptr;
 	std::string m_sSerialNumber;       
-	int m_nAvailableChannels;         
-	int m_nAvailableModules;            
-	bool m_bHasSTE;                   
-	int m_nSTEIdx;                     
-	float m_fSamplingRate;
-	int m_nRecordingMode;             
+	int m_nAvailableChannels = -1;         
+	int m_nAvailableModules = -1;            
+	bool m_bHasSTE = false;                   
+	int m_nSTEIdx = -1;                     
+	float m_fSamplingRate = -1.0;
+	int m_nRecordingMode = -1;             
 
 	// set during configuration
 	typedef struct _channelInfo {
@@ -30,33 +29,31 @@ private:
 		int m_nChannelType;
 		float m_fGain;
 	}t_channelInfo;
-	t_channelInfo m_pChannelInfo[100];
-	
+
+	std::vector<t_channelInfo> m_pChannelInfo;	
 	std::vector<int> m_pnEegIndices;
 	std::vector<int> m_pnAuxIndices;
 	std::vector<int> m_pnAccIndices;
 	std::vector<int> m_pnTrigIndices;
 
-	int m_nSampleSize;
-	int m_nEnabledChannelCnt;
-	int m_nSampleCounterIdxInPush;
-	bool m_bIsClosed;
-	bool m_bIs64;
-	bool m_bUseSampleCounter;
-	bool m_bWasEnumerated;
+	int m_nSampleSize = -1;
+	int m_nEnabledChannelCnt = -1;
+	int m_nSampleCounterIdxInPush = -1;
+	bool m_bIsClosed = false;
+	bool m_bIs64 = false;
+	bool m_bUseSampleCounter = false;
+	bool m_bWasEnumerated = false;
 
 public:
 
-	LiveAmp(void) { m_bWasEnumerated = false; m_nConnectedDevices = -1; }
-	~LiveAmp() { ; }
+	LiveAmp(std::string serialNumberIn, float samplingRateIn = 500, bool bUseSampleCounter = false, bool useSim = false, int recordingModeIn = RM_NORMAL);
+	~LiveAmp() { close(); }
 	
 	// get the serial numbers and channel counts of all available liveamps
-	void enumerate(std::vector<std::pair<std::string, int>> &ampData, bool useSim=false);
+	static int enumerate(std::vector<std::pair<std::string, int>> &ampData, bool useSim=false);
 
-	void Error(const std::string& sError, int nErrorNum);
-	//
-	int Setup(std::string serialNumberIn, float samplingRateIn = 500, bool bUseSampleCounter = false, bool useSim = false, int recordingModeIn = RM_NORMAL);
-
+	static void Error(const std::string& sError, int nErrorNum);
+	
 	// close live amp device
 	void close();
 

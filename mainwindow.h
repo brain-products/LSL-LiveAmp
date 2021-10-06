@@ -119,12 +119,11 @@ private:
 	std::vector<int> m_pnUsableChannelsByDevice;
 	bool m_bOverwrite;
 	bool m_bOverrideAutoUpdate;
-	LiveAmp m_LiveAmp;
+	std::shared_ptr<LiveAmp> m_pLiveAmp;
 	std::vector<std::string> m_psLiveAmpSns;
 	std::unique_ptr<std::thread>  m_ptReaderThread;
 	//ListenThread* m_pListenThread;
 	Ui::MainWindow* ui;
-	bool m_bUseSimulators;
 	bool m_bStop;
 	t_TriggerOutputMode m_TriggerOutputMode;
 
