@@ -115,17 +115,6 @@ LiveAmp::LiveAmp(std::string sSerialNumber, float fSamplingRate, bool bUseSample
 	else
 		strcpy_s(HWI, "ANY"); // todo: parameterize this
 
-	int nRetVal = -1;
-	int nRes = 5;
-	//if (!m_bWasEnumerated)
-	//{
-	//	nRes = ampEnumerateDevices(HWI, sizeof(HWI), "", 0);
-	//	m_nConnectedDevices = nRes;
-	//	m_bWasEnumerated = true;
-	//}
-
-	if (nRes <= 0)
-		throw std::runtime_error("No LiveAmp connected");
 	for (int i = 0; i < 50; i++)
 	{
 		int nResult;
@@ -143,7 +132,7 @@ LiveAmp::LiveAmp(std::string sSerialNumber, float fSamplingRate, bool bUseSample
 
 			// got a hit!
 			if (!(strcmp(sVar, sSerialNumber.c_str()))) {
-				nRetVal = 0;
+				//nRetVal = 0;
 				// set the device mode to recording
 				nResult = ampSetProperty(m_Handle, PG_DEVICE, 0, DPROP_I32_RecordingMode, &nRecordingMode, sizeof(nRecordingMode));
 				if (nResult != AMP_OK)
@@ -478,7 +467,6 @@ int64_t LiveAmp::pullAmpData(BYTE* pBuffer, int nBufferSize) {
 	return nSamplesRead;
 }
 
-// TODO: overload this function to support other data types, maybe use a std::vector<T> for this?
 void LiveAmp::pushAmpData(BYTE* pBuffer, int nBufferSize, int64_t nSamplesRead, std::vector<std::vector<float>>& pfOutData)
 {
 	uint64_t nSampleCount;

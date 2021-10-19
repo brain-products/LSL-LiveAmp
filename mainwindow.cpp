@@ -49,8 +49,6 @@ MainWindow::MainWindow(QWidget *parent, const char* config_file): QMainWindow(pa
 	QObject::connect(ui->eegChannelCount, SIGNAL(valueChanged(int)),this, SLOT(UpdateChannelLabelsWithEeg(int)));
 	QObject::connect(ui->deviceCb,SIGNAL(currentIndexChanged(int)),this,SLOT(ChooseDevice(int)));
 	QObject::connect(ui->auxChannelCount, SIGNAL(valueChanged(int)), this, SLOT(UpdateChannelLabelsAux(int)));
-	QObject::connect(ui->useACC, SIGNAL(clicked(bool)), this, SLOT(UpdateChannelLabelsAcc(bool)));
-	QObject::connect(ui->sampleCounter, SIGNAL(clicked(bool)), this, SLOT(UpdateChannelLabelsSampleCounter(bool)));
 	QObject::connect(ui->rbSync, SIGNAL(clicked(bool)), this, SLOT(RadioButtonBehavior(bool)));
 	QObject::connect(ui->rbMirror, SIGNAL(clicked(bool)), this, SLOT(RadioButtonBehavior(bool)));
 }
@@ -138,16 +136,6 @@ void MainWindow::UpdateChannelLabelsAux(int)
 {
 	//if (!ui->overwriteChannelLabels->isChecked())return;
 	UpdateChannelLabels();
-}
-
-void MainWindow::UpdateChannelLabelsAcc(bool b) 
-{
-	//UpdateChannelLabels();
-}
-
-void MainWindow::UpdateChannelLabelsSampleCounter(bool b)
-{
-	//UpdateChannelLabels();
 }
 
 void MainWindow::closeEvent(QCloseEvent *ev) 
@@ -295,8 +283,8 @@ void MainWindow::RefreshDevices()
 			ss.clear();
 			ss << it->first << " (" << it->second << ")";
 			std::cout<<it->first<<std::endl;
-			auto x = ss.str(); // oh, c++...
-			qsl << QString(ss.str().c_str()); // oh, Qt...
+			auto x = ss.str();
+			qsl << QString(ss.str().c_str());
 			m_psLiveAmpSns.push_back(it->first);
 			m_pnUsableChannelsByDevice.push_back(it->second);
 		}
@@ -320,13 +308,6 @@ void MainWindow::ChooseDevice(int which)
 	UpdateChannelLabels();
 }
 
-// TODO: make this meaningful
-bool MainWindow::CheckConfiguration()
-{
-	bool bRes = true;
-	return bRes;
-}
-
 void MainWindow::Link() 
 {
 	if (m_ptReaderThread) 
@@ -336,8 +317,6 @@ void MainWindow::Link()
 			m_bStop = true;
 			m_ptReaderThread->join();
 			m_ptReaderThread.reset();
-			//emit StopListenerLoop();
-			//int res = SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
 		} 
 		catch(std::exception &e) 
 		{
@@ -400,14 +379,7 @@ void MainWindow::Link()
 			this->setCursor(Qt::WaitCursor);
 			std::string error;
 			m_pLiveAmp.reset(new LiveAmp(sSerialNumber, fSamplingRate, ampConfiguration.m_bUseSampleCounter, ampConfiguration.m_bUseSim, RM_NORMAL));
-			/*if (nRet != 0)
-			{
-				QMessageBox::critical(this, tr("LiveAmp Connector"),
-					tr(("Cannot find device with serial number " + sSerialNumber).c_str()),
-					QMessageBox::Ok);
-				this->setWindowTitle("LiveAmp Connector");
-				this->setCursor(Qt::ArrowCursor);
-			}*/
+
 			if(ui->auxChannelCount->value() > 0 && !m_pLiveAmp->hasSTE())
 			{
 				QMessageBox::critical(this, tr("LiveAmp Connector"),
@@ -441,8 +413,6 @@ void MainWindow::Link()
 							tr("The current device being linked is not a LiveAmp64, but more than 32 EEG/BiPolar channels are requested.\n"
 								"If you are trying to connect to a 64 channel device, power cycle and try again."),
 							QMessageBox::Ok);
-				
-				;// issue warning
 				m_pLiveAmp->enableChannels(eegIndices, auxIndices, ampConfiguration.m_bUseACC);
 				this->setCursor(Qt::ArrowCursor);
 				// start reader thread
@@ -540,7 +510,6 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 		}
 
 		if(ampConfiguration.m_bUseACC)
-			
 		{
 			channels.append_child("channel")
 				.append_child_value("label", "ACC_X")
@@ -637,8 +606,6 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 		int64_t nSamplesRead;
 		int nSampleCount;
 
-
-
 		while (!m_bStop) {
 			nSamplesRead = m_pLiveAmp->pullAmpData(pBuffer, nBufferSize);
 			if (nSamplesRead <= 0){
@@ -667,7 +634,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 					// totalChannelCount is always equivalent to the last channel in the liveamp_buffer
 					// which corresponds to the output trigger, the one before it is the input trigger
 					float fMrkrTmp = (float)(1-((int)ppfLiveAmpBuffer[i][nTriggerIdx] % 2)); // only 1 bit
-					fMrkr = (fMrkrTmp == fPrevMarker ? -1.0 : (float)(1-(int)ppfLiveAmpBuffer[i][nTriggerIdx] % 2));
+					fMrkr = (fMrkrTmp == fPrevMarker ? -1.0 : (float)((int)1-(int)ppfLiveAmpBuffer[i][nTriggerIdx] % 2));
 					fPrevMarker = fMrkrTmp;
 					if(ampConfiguration.m_bSampledMarkersEEG)
 						pfSampleBuffer.push_back(fMrkr);
@@ -681,10 +648,9 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 						if (ampConfiguration.m_bSampledMarkersEEG)
 							pfSampleBuffer.push_back(fMrkrIn);
 
-						//if (!ui->rbDefault->isChecked())
 						if (ampConfiguration.m_bIsSTEInSync)
 						{
-							float fMrkrTmpOut = (float)(((int)ppfLiveAmpBuffer[i][nTriggerIdx + 1] >> 8));
+							float fMrkrTmpOut = (float)(((int)ppfLiveAmpBuffer[i][nTriggerIdx + (int)1] >> 8));
 							fMrkrOut = (fMrkrTmpOut == fPrevMarkerOut ? -1.0 : fMrkrTmpOut);
 							fPrevMarkerOut = fMrkrTmpOut;
 
@@ -707,7 +673,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 						if (fUMrkr != fPrevUMarker)
 						{
 							std::string sMrkr = std::to_string((int)fUMrkr);
-							pMarkerOutlet->push_sample(&sMrkr, dNow + (double)(s + 1 - nSampleCount) / ampConfiguration.m_dSamplingRate);
+							pMarkerOutlet->push_sample(&sMrkr, dNow + (double)(s + (int)1 - nSampleCount) / ampConfiguration.m_dSamplingRate);
 						}
 						fPrevUMarker = fUMrkr;
 						if (m_pLiveAmp->hasSTE())
@@ -716,16 +682,16 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 							if (fUMrkrIn != fPrevUMarkerIn) 
 							{
 								std::string sMrkrIn = std::to_string((int)fUMrkrIn);
-								pMarkerOutletSTE->push_sample(&sMrkrIn, dNow + (double)(s + 1 - nSampleCount) / ampConfiguration.m_dSamplingRate);
+								pMarkerOutletSTE->push_sample(&sMrkrIn, dNow + (double)(s + (int)1 - nSampleCount) / ampConfiguration.m_dSamplingRate);
 							}
 							fPrevUMarkerIn = fUMrkrIn;
 							if (ampConfiguration.m_bIsSTEInSync)
 							{
-								fUMrkrOut = (float)(((int)ppfLiveAmpBuffer[s][nTriggerIdx + 1] >> 8));
+								fUMrkrOut = (float)(((int)ppfLiveAmpBuffer[s][nTriggerIdx + (int)1] >> 8));
 								if (fUMrkrOut != fPrevUMarkerOut) 
 								{
 									std::string sMrkrOut = std::to_string((int)fUMrkrOut);
-									pMarkerOutletSync->push_sample(&sMrkrOut, dNow + (double)(s + 1 - nSampleCount) / ampConfiguration.m_dSamplingRate);
+									pMarkerOutletSync->push_sample(&sMrkrOut, dNow + (double)(s + (int)1 - nSampleCount) / ampConfiguration.m_dSamplingRate);
 								}
 								fPrevUMarkerOut = fUMrkrOut;
 							}
@@ -739,7 +705,6 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 
 	catch (std::exception & e)
 	{
-		//emit RethrowListenerException(e);
 		throw std::runtime_error((std::string("Acquisition loop failure: ") += e.what()).c_str());
 	}
 

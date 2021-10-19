@@ -48,44 +48,9 @@ struct t_AppVersion
 	int32_t Bugfix;
 };
 
-//class ListenThread : public QThread
-//{
-//	Q_OBJECT
-//		void run() override
-//	{
-//		Loop();
-//	};
-//
-//public:
-//	void Setup(t_AmpConfiguration ampConfiguration, const LiveAmp& liveAmp)
-//	{
-//		m_LiveAmp = liveAmp;
-//		m_AmpConfiguration = ampConfiguration;
-//		m_bStop = false;
-//	}
-//
-//public slots:
-//	void StopLoop();
-//
-//private:
-//	t_AppVersion m_AppVersion;
-//	t_AmpConfiguration m_AmpConfiguration;
-//	LiveAmp m_LiveAmp;
-//	bool m_bStop;
-//	void Loop();
-//
-//signals:
-//	void RethrowListenerException(std::exception e);
-//
-//};
-
 namespace Ui {
 class MainWindow;
 }
-
-
-
-
 
 class MainWindow : public QMainWindow
 {
@@ -104,14 +69,9 @@ private slots:
     void closeEvent(QCloseEvent *ev);
 	void UpdateChannelLabelsWithEeg(int);
 	void UpdateChannelLabelsAux(int);
-	void UpdateChannelLabelsAcc(bool);
-	void UpdateChannelLabelsSampleCounter(bool);
 	void ChooseDevice(int which);
 	void RadioButtonBehavior(bool b);
 	void HandleListenerException(std::exception e);
-
-//signals:
-//	void StopListenerLoop();
 
 private:
 	t_AppVersion m_AppVersion;
@@ -122,12 +82,10 @@ private:
 	std::shared_ptr<LiveAmp> m_pLiveAmp;
 	std::vector<std::string> m_psLiveAmpSns;
 	std::unique_ptr<std::thread>  m_ptReaderThread;
-	//ListenThread* m_pListenThread;
 	Ui::MainWindow* ui;
 	bool m_bStop;
 	t_TriggerOutputMode m_TriggerOutputMode;
 
-	bool CheckConfiguration();
 	void WaitMessage();
 	void UpdateChannelLabels(void);
 	void ReadThread(t_AmpConfiguration ampConfiguration);
