@@ -132,13 +132,11 @@ LiveAmp::LiveAmp(std::string sSerialNumber, float fSamplingRate, bool bUseSample
 
 			// got a hit!
 			if (!(strcmp(sVar, sSerialNumber.c_str()))) {
-				//nRetVal = 0;
+
 				// set the device mode to recording
 				nResult = ampSetProperty(m_Handle, PG_DEVICE, 0, DPROP_I32_RecordingMode, &nRecordingMode, sizeof(nRecordingMode));
 				if (nResult != AMP_OK)
 					Error("Error setting acquisition mode, error code:  ", nResult);
-				//throw std::runtime_error("Error setting acquisition mode, error code:  " + std::to_string(nResult));
-
 				m_nRecordingMode = nRecordingMode;
 				m_sSerialNumber = std::string(sVar);
 				nResult = ampGetProperty(m_Handle, PG_DEVICE, 0, DPROP_I32_AvailableChannels, &m_nAvailableChannels, sizeof(m_nAvailableChannels));
@@ -172,7 +170,7 @@ LiveAmp::LiveAmp(std::string sSerialNumber, float fSamplingRate, bool bUseSample
 					&fSamplingRate, sizeof(fSamplingRate));
 				if (nResult != AMP_OK)
 					Error("Error setting sampling rate, error code: ", nResult);
-				m_fSamplingRate = fSamplingRate;		
+				m_fSamplingRate = fSamplingRate;
 				break;
 			}
 		}
@@ -300,7 +298,7 @@ void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::ve
 		if (nRes != AMP_OK)
 			throw std::runtime_error("Error getting property for channel type: error code:  " + std::to_string(nRes));
 		nRes = ampGetProperty(m_Handle, PG_CHANNEL, i, CPROP_CHR_Unit, sUnit, sizeof(sUnit));
-		if (nType == CT_EEG || nType == CT_BIP) 
+		if (nType == CT_EEG || nType == CT_BIP)
 		{
 			for (std::vector<int>::const_iterator it = pnEegIndices.begin(); it != pnEegIndices.end(); ++it)
 			{
@@ -311,7 +309,7 @@ void LiveAmp::enableChannels(const std::vector<int>& pnEegIndices, const std::ve
 						throw std::runtime_error("Error SetProperty enable for EEG channels, error: " + std::to_string(nRes));
 					m_pnEegIndices.push_back(i);
 					++m_nEnabledChannelCnt;
-					
+
 				}
 			}
 			nMaxEEGNumber++;

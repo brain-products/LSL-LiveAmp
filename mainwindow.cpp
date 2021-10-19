@@ -265,7 +265,7 @@ void MainWindow::RefreshDevices()
 	this->setWindowTitle("Searching for Devices...");
 	try
 	{
-		m_pLiveAmp->enumerate(ampData, ui->useSim->checkState());
+		LiveAmp::enumerate(ampData, ui->useSim->checkState());
 	}
 	catch(std::exception &e) 
 	{
