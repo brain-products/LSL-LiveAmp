@@ -4,10 +4,13 @@
 #include <QtCore/QtCore>
 #include <iostream>
 #include <sstream>
-
-
-
 #include "LiveAmp.h"
+
+#if _WIN64
+#define BITDEPTH "64"
+#else
+#define BITDEPTH "32"
+#endif
 
 #define LIBVERSIONSTREAM(version) version.Major << "." << version.Minor << "." << version.Build << "." << version.Revision
 #define LSLVERSIONSTREAM(version) (version/100) << "." << (version%100)
@@ -34,11 +37,10 @@ MainWindow::MainWindow(QWidget *parent, const char* config_file): QMainWindow(pa
 {
 	m_AppVersion.Major = 1;
 	m_AppVersion.Minor = 20;
-	m_AppVersion.Bugfix = 2;
+	m_AppVersion.Bugfix = 3;
 
 	m_bOverrideAutoUpdate = false;
 	ui->setupUi(this);
-	LoadConfig(config_file);
 
 	QObject::connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
 	QObject::connect(ui->linkButton, SIGNAL(clicked()), this, SLOT(Link()));
@@ -51,6 +53,8 @@ MainWindow::MainWindow(QWidget *parent, const char* config_file): QMainWindow(pa
 	QObject::connect(ui->auxChannelCount, SIGNAL(valueChanged(int)), this, SLOT(UpdateChannelLabelsAux(int)));
 	QObject::connect(ui->rbSync, SIGNAL(clicked(bool)), this, SLOT(RadioButtonBehavior(bool)));
 	QObject::connect(ui->rbMirror, SIGNAL(clicked(bool)), this, SLOT(RadioButtonBehavior(bool)));
+	QString cfgfilepath = FindConfigFile(config_file);
+	LoadConfig(cfgfilepath);
 }
 
 void MainWindow::UpdateChannelLabels(void) 
@@ -128,7 +132,7 @@ void MainWindow::VersionsDialog()
 	ss << "Amplifier_LIB: " << LIBVERSIONSTREAM(libVersion)  << "\n" <<
 		  "lsl protocol: " << LSLVERSIONSTREAM(lslProtocolVersion) << "\n" <<
 		  "liblsl: " << LSLVERSIONSTREAM(lslLibVersion) << "\n" <<
-		  "App: " << APPVERSIONSTREAM(m_AppVersion);
+		  "App: " << APPVERSIONSTREAM(m_AppVersion) << ", " << BITDEPTH << "-bit";
 	QMessageBox::information(this, "Versions", ss.str().c_str(), QMessageBox::Ok);
 }
 
@@ -723,7 +727,29 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 	}
 }
 
-
+QString MainWindow::FindConfigFile(const char* filename) {
+	if (filename) {
+		QString qfilename(filename);
+		if (!QFileInfo::exists(qfilename))
+			QMessageBox(QMessageBox::Warning, "Config file not found",
+				QStringLiteral("The file '%1' doesn't exist").arg(qfilename), QMessageBox::Ok,
+				this);
+		else
+			return qfilename;
+	}
+	QFileInfo exeInfo(QCoreApplication::applicationFilePath());
+	QString defaultCfgFilename(exeInfo.completeBaseName() + ".cfg");
+	QStringList cfgpaths;
+	cfgpaths << QDir::currentPath()
+		<< QStandardPaths::standardLocations(QStandardPaths::ConfigLocation) << exeInfo.path();
+	for (auto path : cfgpaths) {
+		QString cfgfilepath = path + QDir::separator() + defaultCfgFilename;
+		if (QFileInfo::exists(cfgfilepath)) return cfgfilepath;
+	}
+	QMessageBox(QMessageBox::Warning, "No config file not found",
+		QStringLiteral("No default config file could be found"), QMessageBox::Ok, this);
+	return "";
+}
 
 MainWindow::~MainWindow() 
 {

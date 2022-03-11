@@ -92,6 +92,7 @@ private:
 	void LoadConfig(const QString& filename);
 	void SaveConfig(const QString& filename);
 	void ResetGuiEnabling(bool b);
+	QString FindConfigFile(const char* filename);
 };
 
 #endif // MAINWINDOW_H

@@ -1,3 +1,8 @@
+LiveAmp LSL Connector v1.20.3
+-PATCH: report bitness in 'About'
+-PATCH: update to LSL v1.15.2
+-BUGFIX: find config file properly on startup
+
 LiveAmp LSL Connector v1.20.2
 -PATCH: implemented improved error handling in LiveAmp class
 -BUGFIX: fixed implementation of simulated amplifier
