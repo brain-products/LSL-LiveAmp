@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent, const char* config_file): QMainWindow(pa
 {
 	m_AppVersion.Major = 1;
 	m_AppVersion.Minor = 20;
-	m_AppVersion.Bugfix = 3;
+	m_AppVersion.Bugfix = 4;
 
 	m_bOverrideAutoUpdate = false;
 	ui->setupUi(this);
@@ -321,6 +321,7 @@ void MainWindow::Link()
 			m_bStop = true;
 			m_ptReaderThread->join();
 			m_ptReaderThread.reset();
+
 		} 
 		catch(std::exception &e) 
 		{
@@ -671,9 +672,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 				{
 					for(int s=0;s<nSampleCount;s++)
 					{
-						// shift left to 0 out the top 8 bits, then shift right to return and keep the lower 8
-						// subtract from 1 because the bit order goes from right to left
-						fUMrkr = (float)(1 - (int)ppfLiveAmpBuffer[s][nTriggerIdx] % 2);
+						fUMrkr = (float)((int)ppfLiveAmpBuffer[s][nTriggerIdx] % 2);
 						if (fUMrkr != fPrevUMarker)
 						{
 							std::string sMrkr = std::to_string((int)fUMrkr);
