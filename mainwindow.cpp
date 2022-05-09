@@ -638,7 +638,7 @@ void MainWindow::ReadThread(t_AmpConfiguration ampConfiguration)
 					// if the trigger is a new value, record it, else it is 0.0
 					// totalChannelCount is always equivalent to the last channel in the liveamp_buffer
 					// which corresponds to the output trigger, the one before it is the input trigger
-					float fMrkrTmp = (float)(1-((int)ppfLiveAmpBuffer[i][nTriggerIdx] % 2)); // only 1 bit
+					float fMrkrTmp = (float)(((int)ppfLiveAmpBuffer[i][nTriggerIdx] % 2)); // only 1 bit
 					fMrkr = (fMrkrTmp == fPrevMarker ? -1.0 : (float)((int)1-(int)ppfLiveAmpBuffer[i][nTriggerIdx] % 2));
 					fPrevMarker = fMrkrTmp;
 					if(ampConfiguration.m_bSampledMarkersEEG)
