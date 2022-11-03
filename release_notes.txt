@@ -1,3 +1,6 @@
+LiveAmp LSL Connector v1.20.4
+-BUGFIX: reversed polarity in unsampled 1-bit trigger markers
+
 LiveAmp LSL Connector v1.20.3
 -PATCH: report bitness in 'About'
 -PATCH: update to LSL v1.15.2
