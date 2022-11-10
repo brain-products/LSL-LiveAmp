@@ -569,9 +569,10 @@ void LiveAmp::setOutTriggerMode(t_TriggerOutputMode triggerMode, int nSyncPin, i
 	if (!m_bHasSTE)return;
 	int nPer = (int)m_fSamplingRate / nFreq;
 	int res = ampSetProperty(m_Handle, PG_MODULE, m_nSTEIdx, MPROP_I32_TriggerOutMode, &triggerMode, sizeof(triggerMode));
-
 	res = ampSetProperty(m_Handle, PG_MODULE, m_nSTEIdx, MPROP_I32_TriggerSyncPin, &nSyncPin, sizeof(nSyncPin));
 	res = ampSetProperty(m_Handle, PG_MODULE, m_nSTEIdx, MPROP_I32_TriggerSyncPeriod, &nPer, sizeof(nPer));
 	res = ampSetProperty(m_Handle, PG_MODULE, m_nSTEIdx, MPROP_I32_TriggerSyncWidth, &nPulseWidth, sizeof(nPulseWidth));
+	if (res != AMP_OK)
+		Error("Error setting trigger output mode, error code:  ", res);
 }
 
