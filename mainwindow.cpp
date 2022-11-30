@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent, const char* config_file): QMainWindow(pa
 {
 	m_AppVersion.Major = 1;
 	m_AppVersion.Minor = 20;
-	m_AppVersion.Bugfix = 4;
+	m_AppVersion.Bugfix = 5;
 
 	m_bOverrideAutoUpdate = false;
 	ui->setupUi(this);
@@ -263,7 +263,7 @@ void MainWindow::WaitMessage()
 void MainWindow::RefreshDevices()
 {
 	ui->deviceCb->blockSignals(true);
-	QStringList qsl;
+	QVector<QString> deviceNames;
 	std::vector<std::pair<std::string, int>> ampData;
 	this->setCursor(Qt::WaitCursor);
 	this->setWindowTitle("Searching for Devices...");
@@ -284,23 +284,20 @@ void MainWindow::RefreshDevices()
 		int i=0;
 		
 		for(std::vector<std::pair<std::string, int>>::iterator it=ampData.begin(); it!=ampData.end();++it){
-			ss.clear();
-			ss << it->first << " (" << it->second << ")";
-			std::cout<<it->first<<std::endl;
-			auto x = ss.str();
-			qsl << QString(ss.str().c_str());
+			std::string name = it->first + " (" + std::to_string(it->second) + ")";
+			deviceNames.push_back(QString(name.c_str()));
 			m_psLiveAmpSns.push_back(it->first);
 			m_pnUsableChannelsByDevice.push_back(it->second);
+			
 		}
-		ui->deviceCb->addItems(qsl);
+		ui->deviceCb->addItems(QStringList::fromVector(deviceNames));
 		ChooseDevice(0);
 	}
 	
 	this->setWindowTitle("LiveAmp Connector");
-	ui->deviceCb->blockSignals(true);
+	ui->deviceCb->blockSignals(false);
 }
 
-// handle changes in chosen device
 void MainWindow::ChooseDevice(int which)
 {
 	if(!m_psLiveAmpSns.empty())
@@ -311,6 +308,7 @@ void MainWindow::ChooseDevice(int which)
 	ui->eegChannelCount->setValue(m_nEegChannelCount);
 	UpdateChannelLabels();
 }
+
 
 void MainWindow::Link() 
 {
@@ -343,7 +341,6 @@ void MainWindow::Link()
 			ampConfiguration.m_dSamplingRate = (double)pnSamplingRates[ui->samplingRate->currentIndex()];
 			ampConfiguration.m_bUseACC = ui->useACC->checkState() == Qt::Checked;
 			ampConfiguration.m_bUseSampleCounter = ui->sampleCounter->checkState() == Qt::Checked;
-			ampConfiguration.m_bUseSim = ui->useSim->checkState() == Qt::Checked;
 			ampConfiguration.m_bUnsampledMarkers = ui->unsampledMarkers->checkState() == Qt::Checked;
 			ampConfiguration.m_bSampledMarkersEEG = ui->sampledMarkersEEG->checkState()==Qt::Checked;
 			ampConfiguration.m_bIsSTEInDefault = (ui->rbDefault->isChecked());
@@ -383,7 +380,7 @@ void MainWindow::Link()
 			this->setWindowTitle(QString(std::string("Connecting to "+sSerialNumber).c_str()));
 			this->setCursor(Qt::WaitCursor);
 			std::string error;
-			m_pLiveAmp.reset(new LiveAmp(sSerialNumber, fSamplingRate, ampConfiguration.m_bUseSampleCounter, ampConfiguration.m_bUseSim, RM_NORMAL));
+			m_pLiveAmp.reset(new LiveAmp(sSerialNumber, fSamplingRate, ampConfiguration.m_bUseSampleCounter, RM_NORMAL));
 
 			if(ui->auxChannelCount->value() > 0 && !m_pLiveAmp->hasSTE())
 			{

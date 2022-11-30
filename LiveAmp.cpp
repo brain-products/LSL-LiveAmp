@@ -104,16 +104,11 @@ void LiveAmp::Error(const std::string& sError, int nErrorNum)
 	throw std::runtime_error(sFullError);
 }
 
-LiveAmp::LiveAmp(std::string sSerialNumber, float fSamplingRate, bool bUseSampleCounter, bool bUseSim, int nRecordingMode) {
+LiveAmp::LiveAmp(std::string sSerialNumber, float fSamplingRate, bool bUseSampleCounter, int nRecordingMode) {
 
-	char HWI[20];
 	m_bHasSTE = false;
 	m_bIs64 = false;
 	m_bUseSampleCounter = bUseSampleCounter;
-	if (bUseSim)
-		strcpy_s(HWI, "SIM");
-	else
-		strcpy_s(HWI, "ANY"); // todo: parameterize this
 
 	for (int i = 0; i < 50; i++)
 	{
@@ -187,8 +182,7 @@ int LiveAmp::enumerate(std::vector<std::pair<std::string, int>>& ampData, bool u
 		throw std::runtime_error("Input ampData vector isn't empty");
 		return -1;
 	}
-
-	if (useSim)
+	if(useSim)
 		strcpy_s(HWI, "SIM");
 	else
 		strcpy_s(HWI, "ANY");
@@ -211,7 +205,7 @@ int LiveAmp::enumerate(std::vector<std::pair<std::string, int>>& ampData, bool u
 				Error(msg, nResult);
 			}
 
-			char sVar[20]; sVar[19] = 0;
+			char sVar[100]; sVar[99] = 0;
 			nResult = ampGetProperty(handle, PG_DEVICE, i, DPROP_CHR_SerialNumber, sVar, sizeof(sVar));
 			if (nResult != AMP_OK) {
 				std::string msg = "Cannot get device serial number: ";
@@ -219,32 +213,29 @@ int LiveAmp::enumerate(std::vector<std::pair<std::string, int>>& ampData, bool u
 				msg.append("  error= ");
 				Error(msg, nResult);
 			}
-			else {
 
-				int32_t nAvailableModules;
-				//int32_t nAvailableChannels;
-				nResult = ampGetProperty(handle, PG_DEVICE, 0, DPROP_I32_AvailableModules, &nAvailableModules, sizeof(nAvailableModules));
-				int32_t nVar;
-				char sModName[100]; sModName[99] = 0;
-				int nTotalAvailableChannels = 0;
-				for (int j = 0; j < nAvailableModules; j++)
-				{
-					nResult = ampGetProperty(handle, PG_MODULE, j, MPROP_I32_UseableChannels, &nVar, sizeof(nVar));
-					if (nResult != AMP_OK) {
-						std::string msg = "Cannot get device channel count: ";
-						msg.append(std::to_string(j));
-						msg.append("  error= ");
-						Error(msg, nResult);
-					}
-					else
-					{
-						nResult = ampGetProperty(handle, PG_MODULE, j, MPROP_CHR_Type, &sModName, sizeof(sModName));
-						if (strcmp(sModName, "STE"))
-							nTotalAvailableChannels += nVar;
-					}
+			int32_t nAvailableModules;
+			//int32_t nAvailableChannels;
+			nResult = ampGetProperty(handle, PG_DEVICE, 0, DPROP_I32_AvailableModules, &nAvailableModules, sizeof(nAvailableModules));
+			int32_t nVar;
+			char sModName[100]; sModName[99] = 0;
+			int nTotalAvailableChannels = 0;
+			for (int j = 0; j < nAvailableModules; j++)
+			{
+				nResult = ampGetProperty(handle, PG_MODULE, j, MPROP_I32_UseableChannels, &nVar, sizeof(nVar));
+				if (nResult != AMP_OK) {
+					std::string msg = "Cannot get device channel count: ";
+					msg.append(std::to_string(j));
+					msg.append("  error= ");
+					Error(msg, nResult);
 				}
-				ampData.push_back(std::make_pair(std::string(sVar), nTotalAvailableChannels));
+
+				nResult = ampGetProperty(handle, PG_MODULE, j, MPROP_CHR_Type, &sModName, sizeof(sModName));
+				if (strcmp(sModName, "STE"))
+					nTotalAvailableChannels += nVar;
 			}
+			ampData.push_back(std::make_pair(std::string(sVar), nTotalAvailableChannels));
+
 			nResult = ampCloseDevice(handle);
 			if (nResult != AMP_OK) {
 				std::string msg = "Cannot close device: ";
