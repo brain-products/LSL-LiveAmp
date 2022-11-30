@@ -46,11 +46,11 @@ private:
 
 public:
 
-	LiveAmp(std::string serialNumberIn, float samplingRateIn = 500, bool bUseSampleCounter = false, bool useSim = false, int recordingModeIn = RM_NORMAL);
+	LiveAmp(std::string serialNumberIn, float samplingRateIn = 500, bool bUseSampleCounter = false, int recordingModeIn = RM_NORMAL);
 	~LiveAmp() { close(); }
 	
 	// get the serial numbers and channel counts of all available liveamps
-	static int enumerate(std::vector<std::pair<std::string, int>> &ampData, bool useSim=false);
+	static int enumerate(std::vector<std::pair<std::string, int>> &ampData, bool useSim = false);
 
 	static void Error(const std::string& sError, int nErrorNum);
 	
