@@ -1,5 +1,6 @@
 > [!Warning]
-> Project deprecated
+> **Project deprecated**
+>
 > LSL-LiveAmp is no longer maintained and has been deprecated.
 > Please find the new BrainVision LSL Connector for BrainAmp and corresponding documentation directly on the [Brain Products website](https://www.brainproducts.com/downloads/more-software/#lsl) as free downloads.
 
